@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QuizState, WidgetConfig } from '../types';
+import { QuizState, WidgetConfig, Question } from '../types';
 import { defaultQuestions } from '../data/questions';
+import { fetchQuestionsFromAPI } from '../utils/apiUtils';
 import QuestionCard from './QuestionCard';
 import ResultScreen from './ResultScreen';
 import ConfettiAnimation from './Confetti';
@@ -12,10 +13,15 @@ interface TriviaQuizProps {
 
 const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   const {
-    questions = defaultQuestions,
+    questions: providedQuestions,
     timeLimit = 30,
+    apiUrl,
     onComplete
   } = config;
+
+  const [questions, setQuestions] = useState<Question[]>(providedQuestions || defaultQuestions);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [state, setState] = useState<QuizState>({
     currentQuestionIndex: 0,
@@ -28,6 +34,26 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   });
 
   const currentQuestion = questions[state.currentQuestionIndex];
+
+  // Fetch questions from API if apiUrl is provided
+  useEffect(() => {
+    if (apiUrl && !providedQuestions) {
+      setIsLoading(true);
+      setError(null);
+      
+      fetchQuestionsFromAPI(apiUrl)
+        .then(fetchedQuestions => {
+          setQuestions(fetchedQuestions);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to fetch questions:', err);
+          setError('Failed to load questions. Using default questions.');
+          setQuestions(defaultQuestions);
+          setIsLoading(false);
+        });
+    }
+  }, [apiUrl, providedQuestions]);
 
   // Timer effect
   useEffect(() => {
@@ -57,7 +83,18 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   const handleAnswerSelect = useCallback((answerIndex: number) => {
     if (state.isAnswered) return;
 
-    const isCorrect = answerIndex === currentQuestion.correctAnswer;
+    let isCorrect = false;
+    
+    if (currentQuestion.multipleChoice) {
+      // For multiple choice, check if the selected answer is in the correct answers array
+      const correctAnswers = Array.isArray(currentQuestion.correctAnswer) 
+        ? currentQuestion.correctAnswer 
+        : [currentQuestion.correctAnswer];
+      isCorrect = correctAnswers.includes(answerIndex);
+    } else {
+      // For single choice, check if the selected answer matches the correct answer
+      isCorrect = answerIndex === currentQuestion.correctAnswer;
+    }
     
     setState(prev => ({
       ...prev,
@@ -142,6 +179,30 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       return () => clearTimeout(timer);
     }
   }, [state.showConfetti]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="widget-container">
+        <div className="quiz-card text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading questions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="widget-container">
+        <div className="quiz-card text-center">
+          <div className="text-red-500 mb-4">⚠️</div>
+          <p className="text-gray-600 text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="widget-container">

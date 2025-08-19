@@ -29,23 +29,61 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       return selectedAnswer === index ? 'selected' : '';
     }
     
-    if (index === question.correctAnswer) {
-      return 'correct';
+    // Handle multiple choice questions
+    if (question.multipleChoice) {
+      const correctAnswers = Array.isArray(question.correctAnswer) 
+        ? question.correctAnswer 
+        : [question.correctAnswer];
+      
+      if (correctAnswers.includes(index)) {
+        return 'correct';
+      }
+      
+      if (selectedAnswer === index && !correctAnswers.includes(index)) {
+        return 'incorrect';
+      }
+      
+      return '';
+    } else {
+      // Handle single choice questions
+      const correctAnswer = Array.isArray(question.correctAnswer) 
+        ? question.correctAnswer[0] 
+        : question.correctAnswer;
+      
+      if (index === correctAnswer) {
+        return 'correct';
+      }
+      
+      if (selectedAnswer === index && index !== correctAnswer) {
+        return 'incorrect';
+      }
+      
+      return '';
     }
-    
-    if (selectedAnswer === index && index !== question.correctAnswer) {
-      return 'incorrect';
-    }
-    
-    return '';
   };
 
   const getEmoji = (index: number) => {
     if (!isAnswered) return '';
     
-    if (index === question.correctAnswer) return '✅';
-    if (selectedAnswer === index && index !== question.correctAnswer) return '❌';
-    return '';
+    // Handle multiple choice questions
+    if (question.multipleChoice) {
+      const correctAnswers = Array.isArray(question.correctAnswer) 
+        ? question.correctAnswer 
+        : [question.correctAnswer];
+      
+      if (correctAnswers.includes(index)) return '✅';
+      if (selectedAnswer === index && !correctAnswers.includes(index)) return '❌';
+      return '';
+    } else {
+      // Handle single choice questions
+      const correctAnswer = typeof question.correctAnswer === 'number' 
+        ? question.correctAnswer 
+        : question.correctAnswer[0];
+      
+      if (index === correctAnswer) return '✅';
+      if (selectedAnswer === index && index !== correctAnswer) return '❌';
+      return '';
+    }
   };
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -119,12 +157,19 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       <Timer timeLeft={timeLeft} totalTime={totalTime} isActive={!isAnswered} />
 
       {/* Question */}
-      <h2
-        ref={questionRef}
-        className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 leading-relaxed"
-      >
-        {question.question}
-      </h2>
+      <div className="mb-4 sm:mb-6">
+        <h2
+          ref={questionRef}
+          className="text-lg sm:text-xl font-bold text-gray-800 leading-relaxed"
+        >
+          {question.question}
+        </h2>
+        {question.multipleChoice && (
+          <div className="mt-2 inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+            Multiple Choice
+          </div>
+        )}
+      </div>
 
       {/* Options */}
       <div ref={optionsRef} className="space-y-2 sm:space-y-3">
@@ -151,15 +196,34 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       {/* Feedback */}
       {isAnswered && (
         <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-lg text-center transform-gpu">
-          {selectedAnswer === question.correctAnswer ? (
-            <div className="text-green-600 font-semibold bg-green-50 p-2 sm:p-3 rounded-xl border border-green-200 text-sm sm:text-base">
-              🎉 Correct! Well done! 🎉
-            </div>
-          ) : (
-            <div className="text-red-600 font-semibold bg-red-50 p-2 sm:p-3 rounded-xl border border-red-200 text-sm sm:text-base">
-              😔 Wrong! The correct answer was: {question.options[question.correctAnswer]}
-            </div>
-          )}
+          {(() => {
+            let isCorrect = false;
+            let correctAnswerText = '';
+            
+            if (question.multipleChoice) {
+              const correctAnswers = Array.isArray(question.correctAnswer) 
+                ? question.correctAnswer 
+                : [question.correctAnswer];
+              isCorrect = correctAnswers.includes(selectedAnswer || -1);
+              correctAnswerText = correctAnswers.map(index => question.options[index]).join(', ');
+            } else {
+              const correctAnswer = Array.isArray(question.correctAnswer) 
+                ? question.correctAnswer[0] 
+                : question.correctAnswer;
+              isCorrect = selectedAnswer === correctAnswer;
+              correctAnswerText = question.options[correctAnswer];
+            }
+            
+            return isCorrect ? (
+              <div className="text-green-600 font-semibold bg-green-50 p-2 sm:p-3 rounded-xl border border-green-200 text-sm sm:text-base">
+                🎉 Correct! Well done! 🎉
+              </div>
+            ) : (
+              <div className="text-red-600 font-semibold bg-red-50 p-2 sm:p-3 rounded-xl border border-red-200 text-sm sm:text-base">
+                😔 Wrong! The correct answer was: {correctAnswerText}
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

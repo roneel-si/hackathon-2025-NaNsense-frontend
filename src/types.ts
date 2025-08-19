@@ -1,10 +1,22 @@
 export interface Question {
-  id: number;
+  id?: number;
   question: string;
   options: string[];
-  correctAnswer: number;
-  category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  correctAnswer: number | number[];
+  category?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  multipleChoice?: boolean;
+}
+
+export interface APIQuestion {
+  Question: string;
+  Options: string[];
+  multipleChoice: boolean;
+  Answer: string[];
+}
+
+export interface APIResponse {
+  data: APIQuestion[];
 }
 
 export interface QuizState {
@@ -23,6 +35,7 @@ export interface WidgetConfig {
   secondaryColor?: string;
   timeLimit?: number;
   questions?: Question[];
+  apiUrl?: string;
   onComplete?: (score: number, totalQuestions: number) => void;
 }
 

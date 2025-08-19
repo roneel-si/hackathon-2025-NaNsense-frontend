@@ -141,6 +141,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ config = {} }) => {
               <TriviaQuiz 
                 config={{
                   ...config,
+                  apiUrl: config.apiUrl || 'http://localhost:3001/fetch-sports-trivia',
                   onComplete: (score, total) => {
                     // Call the original onComplete if provided
                     if (config.onComplete) {
