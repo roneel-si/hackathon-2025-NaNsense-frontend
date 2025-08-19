@@ -17,28 +17,42 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
 }) => {
   const percentage = Math.round((score / totalQuestions) * 100);
   const isPerfect = score === totalQuestions;
-  const isGood = percentage >= 70;
-  const isAverage = percentage >= 50;
+  const isExcellent = percentage >= 80;
+  const isGood = percentage >= 50;
+  const isPoor = percentage < 50;
 
   const getMessage = () => {
     if (isPerfect) return "🏆 Perfect Score! You're a Rajasthan Royals legend! 🏆";
-    if (isGood) return "🎉 Excellent! Great cricket knowledge! 🎉";
-    if (isAverage) return "👍 Good effort! Keep learning cricket! 👍";
+    if (isExcellent) return "🌟 Excellent! You're a cricket master! 🌟";
+    if (isGood) return "🎉 Good job! Great cricket knowledge! 🎉";
     return "💪 Keep practicing! You'll become a cricket expert! 💪";
   };
 
   const getEmoji = () => {
-    if (isPerfect) return "🏏";
-    if (isGood) return "🌟";
-    if (isAverage) return "⭐";
+    if (isPerfect) return "🏆";
+    if (isExcellent) return "🌟";
+    if (isGood) return "🏏";
     return "💪";
   };
 
   const getStars = () => {
     if (isPerfect) return 5;
-    if (isGood) return 4;
-    if (isAverage) return 3;
+    if (isExcellent) return 4;
+    if (isGood) return 3;
     return Math.max(1, Math.floor(percentage / 20));
+  };
+
+  const getScoreColor = () => {
+    if (isPerfect || isExcellent) return 'rr-gradient';
+    if (isGood) return 'bg-gradient-to-r from-green-500 to-blue-600';
+    return 'bg-gradient-to-r from-orange-500 to-red-600';
+  };
+
+  const getEncouragingMessage = () => {
+    if (isPerfect) return "You're absolutely incredible! A true cricket master! 🚀";
+    if (isExcellent) return "Outstanding performance! You know your cricket! 🎯";
+    if (isGood) return "Well done! Keep learning and improving! 📚";
+    return "Every quiz makes you a better cricket fan! Practice makes perfect! 🧠";
   };
 
   return (
@@ -55,7 +69,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         animate={{ y: 0, rotate: 0 }}
         transition={{ duration: 0.8, type: "spring" }}
       >
-        <div className="text-8xl cricket-bounce">{getEmoji()}</div>
+        <div className={`text-8xl ${isPoor ? '' : 'cricket-bounce'}`}>{getEmoji()}</div>
       </motion.div>
 
       {/* Score Display */}
@@ -72,7 +86,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
           {getMessage()}
         </p>
         
-        <div className="rr-gradient text-white rounded-2xl p-6 mb-4 shadow-xl">
+        <div className={`${getScoreColor()} text-white rounded-2xl p-6 mb-4 shadow-xl`}>
           <div className="text-4xl font-bold mb-2">
             {score}/{totalQuestions}
           </div>
@@ -111,7 +125,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
       >
         <div className="bg-gray-200 rounded-full h-3 mb-2 shadow-inner">
           <motion.div
-            className="rr-gradient h-3 rounded-full shadow-lg"
+            className={`h-3 rounded-full shadow-lg ${
+              isPerfect || isExcellent ? 'rr-gradient' :
+              isGood ? 'bg-gradient-to-r from-green-500 to-blue-600' :
+              'bg-gradient-to-r from-orange-500 to-red-600'
+            }`}
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}
             transition={{ duration: 1, delay: 1 }}
@@ -161,10 +179,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
       >
-        {isPerfect 
-          ? "You're absolutely incredible! A true cricket master! 🚀"
-          : "Every quiz makes you a better cricket fan! 🧠"
-        }
+        {getEncouragingMessage()}
       </motion.p>
 
       {/* Rajasthan Royals branding */}

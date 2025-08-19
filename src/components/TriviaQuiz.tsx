@@ -209,6 +209,8 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       <ConfettiAnimation 
         show={state.showConfetti} 
         onComplete={() => setState(prev => ({ ...prev, showConfetti: false }))}
+        score={state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0)}
+        totalQuestions={questions.length}
       />
       
       <AnimatePresence mode="wait">
