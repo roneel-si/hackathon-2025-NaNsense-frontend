@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rajasthan Royals - Official Website</title>
+    <meta name="description" content="Official website of Rajasthan Royals IPL team. Test your cricket knowledge with our interactive trivia quiz!">
+    
+    <!-- Preload critical resources for better performance -->
+    <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script">
+    <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script">
+    <link rel="preload" href="dist/widget.umd.js" as="script">
+    <link rel="preload" href="dist/style.css" as="style">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+    
+    <style>
+        /* Real website styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                        url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3') center/cover;
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 3rem;
+            margin: 3rem 0;
+        }
+        
+        .main-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .widget-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .widget-title {
+            text-align: center;
+            color: #ff6b35;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+        
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">🏏 Rajasthan Royals</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#team">Team</a></li>
+                <li><a href="#matches">Matches</a></li>
+                <li><a href="#news">News</a></li>
+                <li><a href="#quiz">Quiz</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Welcome to Rajasthan Royals</h1>
+        <p>Experience the thrill of cricket with the most exciting team in IPL</p>
+        <button onclick="document.getElementById('quiz').scrollIntoView()" 
+                style="background: #ff6b35; color: white; border: none; padding: 1rem 2rem; border-radius: 0.5rem; font-size: 1.1rem; cursor: pointer;">
+            Take Our Quiz!
+        </button>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Stats Section -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div>IPL Championships</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">15+</div>
+                <div>Years in IPL</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1000+</div>
+                <div>Quiz Participants</div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <div class="main-content">
+                <h2>About Rajasthan Royals</h2>
+                <p>Rajasthan Royals is a franchise cricket team based in Jaipur, India, that plays in the Indian Premier League (IPL). The team was one of the initial eight teams that competed in the first IPL season in 2008.</p>
+                
+                <h3>Our Achievements</h3>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li>🏆 IPL Champions 2008</li>
+                    <li>🎯 Multiple playoff appearances</li>
+                    <li>⭐ Home to legendary players</li>
+                    <li>🌟 Known for discovering young talent</li>
+                </ul>
+                
+                <h3>Join the Fan Community</h3>
+                <p>Test your cricket knowledge with our exclusive trivia quiz! Challenge yourself with questions about cricket, IPL history, and our team's achievements. Share your score with friends and see who knows cricket the best!</p>
+                
+                <h3>Latest News</h3>
+                <p>Stay updated with the latest news, player transfers, match schedules, and exclusive behind-the-scenes content. Follow us on social media for real-time updates and engage with fellow cricket enthusiasts.</p>
+            </div>
+            
+            <!-- 🎯 WIDGET SECTION - This is where our embeddable widget goes! -->
+            <div class="widget-section" id="quiz">
+                <div class="widget-title">🎯 Test Your Cricket Knowledge!</div>
+                <p style="text-align: center; margin-bottom: 1rem; color: #666;">
+                    Take our interactive trivia quiz and see how well you know cricket!
+                </p>
+                
+                <!-- 🚀 EMBEDDABLE WIDGET CONTAINER -->
+                <div id="trivia-widget"></div>
+                
+                <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #999;">
+                    Powered by <strong>TriviaQuiz Widget</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Rajasthan Royals. All rights reserved.</p>
+        <p>Official IPL Team | Jaipur, India</p>
+    </footer>
+
+    <!-- 🚀 PRODUCTION EMBEDDING CODE -->
+    <!-- Include React and ReactDOM from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Include our widget files (in production, these would be on a CDN) -->
+    <link rel="stylesheet" href="dist/style.css">
+    <script src="dist/widget.umd.js"></script>
+    
+    <!-- Initialize the widget with production configuration -->
+    <script>
+        // Production widget initialization
+        new TriviaQuizWidget('trivia-widget', {
+            timeLimit: 30,
+            onComplete: function(score, total) {
+                // Send to Google Analytics
+                gtag('event', 'quiz_completed', {
+                    score: score,
+                    total: total,
+                    percentage: Math.round(score/total*100),
+                    team: 'Rajasthan Royals'
+                });
+                
+                // Show success message
+                const percentage = Math.round(score/total*100);
+                let message = '';
+                
+                if (percentage === 100) {
+                    message = '🏆 Perfect! You\'re a cricket master!';
+                } else if (percentage >= 80) {
+                    message = '🌟 Excellent! Great cricket knowledge!';
+                } else if (percentage >= 60) {
+                    message = '👍 Good job! Keep learning!';
+                } else {
+                    message = '💪 Keep practicing! You\'ll get better!';
+                }
+                
+                // You could show this in a modal or notification
+                console.log(`Quiz completed! ${message} Score: ${score}/${total} (${percentage}%)`);
+            }
+        });
+        
+        // Production error handling
+        window.addEventListener('error', function(e) {
+            if (e.filename && e.filename.includes('widget.umd.js')) {
+                console.error('Widget error:', e.error);
+                // Send to error tracking service (e.g., Sentry)
+                // Sentry.captureException(e.error);
+            }
+        });
+    </script>
+</body>
+</html>

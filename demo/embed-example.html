@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rajasthan Royals - Sports Trivia</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .widget-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        
+        .widget-title {
+            text-align: center;
+            color: #ff6b35;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏏 Rajasthan Royals Official Website</h1>
+        <p>Test your cricket knowledge with our exclusive trivia quiz!</p>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>Welcome to Rajasthan Royals!</h2>
+            <p>Experience the excitement of cricket with our interactive trivia quiz. Test your knowledge about cricket, IPL, and sports in general!</p>
+            
+            <h3>About Rajasthan Royals</h3>
+            <p>Rajasthan Royals is a franchise cricket team based in Jaipur, India, that plays in the Indian Premier League (IPL). The team was one of the initial eight teams that competed in the first IPL season in 2008.</p>
+            
+            <h3>Our Achievements</h3>
+            <ul>
+                <li>🏆 IPL Champions 2008</li>
+                <li>🎯 Multiple playoff appearances</li>
+                <li>⭐ Home to legendary players</li>
+            </ul>
+            
+            <h3>Join the Fun!</h3>
+            <p>Take our sports trivia quiz and see how well you know your cricket! Challenge your friends and share your scores.</p>
+        </div>
+        
+        <div class="widget-container">
+            <div class="widget-title">🎯 Sports Trivia Quiz</div>
+            <div id="trivia-widget"></div>
+        </div>
+    </div>
+
+    <!-- Include React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Include the widget styles -->
+    <link rel="stylesheet" href="../dist/style.css">
+    
+    <!-- Include the widget script -->
+    <script src="../dist/widget.umd.js"></script>
+    
+    <!-- Initialize the widget -->
+    <script>
+        // Initialize with custom configuration
+        new TriviaQuizWidget('trivia-widget', {
+            timeLimit: 25,
+            onComplete: function(score, total) {
+                console.log(`Quiz completed! Score: ${score}/${total}`);
+                // You can send this data to your analytics or CRM
+            }
+        });
+    </script>
+</body>
+</html>

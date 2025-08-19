@@ -1,0 +1,37 @@
+{
+  "name": "trivia-quiz-widget",
+  "version": "1.0.0",
+  "description": "An embeddable trivia quiz widget with fancy UI and animations",
+  "main": "dist/widget.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "build:widget": "tsc && vite build --config vite.widget.config.ts"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-confetti": "^6.1.0",
+    "framer-motion": "^10.16.4",
+    "lucide-react": "^0.292.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.1.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0"
+  },
+  "keywords": ["widget", "trivia", "quiz", "embeddable", "react", "hackathon", "nansense"],
+  "author": "NaNsense Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roneel-si/hackathon-2025-NaNsense-frontend.git"
+  },
+  "homepage": "https://github.com/roneel-si/hackathon-2025-NaNsense-frontend#readme"
+}

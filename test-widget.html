@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Widget Test Page</h1>
+        <p>This page tests the embeddable trivia quiz widget.</p>
+        
+        <div id="trivia-widget"></div>
+    </div>
+
+    <!-- Include React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Include the widget styles -->
+    <link rel="stylesheet" href="dist/style.css">
+    
+    <!-- Include the widget script -->
+    <script src="dist/widget.umd.js"></script>
+    
+    <!-- Initialize the widget -->
+    <script>
+        new TriviaQuizWidget('trivia-widget', {
+            timeLimit: 30,
+            onComplete: function(score, total) {
+                alert(`Quiz completed! You scored ${score}/${total} (${Math.round(score/total*100)}%)`);
+            }
+        });
+    </script>
+</body>
+</html>
