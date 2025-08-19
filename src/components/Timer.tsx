@@ -7,10 +7,10 @@ const Timer: React.FC<TimerProps> = ({ timeLeft, totalTime }) => {
   const isLowTime = timeLeft <= 10;
 
   return (
-    <div className="flex items-center justify-center mb-4">
+    <div className="flex items-center justify-center mb-3 sm:mb-4">
       <div className="relative">
         <motion.div
-          className="timer-circle"
+          className="timer-circle w-12 h-12 sm:w-16 sm:h-16"
           animate={{
             scale: isLowTime ? [1, 1.1, 1] : 1,
             borderColor: isLowTime ? ['#ef4444', '#dc2626', '#ef4444'] : '#3b82f6'
@@ -20,13 +20,13 @@ const Timer: React.FC<TimerProps> = ({ timeLeft, totalTime }) => {
             repeat: isLowTime ? Infinity : 0
           }}
         >
-          <span className={isLowTime ? 'text-red-600' : 'text-primary-600'}>
+          <span className={`text-sm sm:text-lg font-bold ${isLowTime ? 'text-red-600' : 'text-primary-600'}`}>
             {timeLeft}
           </span>
         </motion.div>
         
         <svg
-          className="absolute inset-0 w-16 h-16 transform -rotate-90"
+          className="absolute inset-0 w-12 h-12 sm:w-16 sm:h-16 transform -rotate-90"
           viewBox="0 0 64 64"
         >
           <circle
@@ -56,7 +56,7 @@ const Timer: React.FC<TimerProps> = ({ timeLeft, totalTime }) => {
       
       {isLowTime && (
         <motion.div
-          className="ml-2 text-2xl"
+          className="ml-2 text-xl sm:text-2xl"
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 0.5, repeat: Infinity }}
         >

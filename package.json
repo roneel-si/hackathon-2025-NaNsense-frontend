@@ -14,7 +14,8 @@
     "react-dom": "^18.2.0",
     "react-confetti": "^6.1.0",
     "framer-motion": "^10.16.4",
-    "lucide-react": "^0.292.0"
+    "lucide-react": "^0.292.0",
+    "gsap": "^3.12.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
@@ -26,12 +27,7 @@
     "typescript": "^5.2.2",
     "vite": "^4.5.0"
   },
-  "keywords": ["widget", "trivia", "quiz", "embeddable", "react", "hackathon", "nansense"],
-  "author": "NaNsense Team",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/roneel-si/hackathon-2025-NaNsense-frontend.git"
-  },
-  "homepage": "https://github.com/roneel-si/hackathon-2025-NaNsense-frontend#readme"
+  "keywords": ["widget", "trivia", "quiz", "embeddable", "react"],
+  "author": "Your Name",
+  "license": "MIT"
 }

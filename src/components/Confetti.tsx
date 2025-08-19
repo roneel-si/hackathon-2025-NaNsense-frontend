@@ -57,6 +57,12 @@ const ConfettiAnimation: React.FC<ConfettiProps> = ({ show, onComplete }) => {
             wind={0.05}
             initialVelocityX={15}
             initialVelocityY={30}
+            confettiSource={{
+              x: 0,
+              y: windowSize.height / 2 - 100,
+              w: 300,
+              h: 200,
+            }}
           />
           
           {/* Additional floating emojis */}
@@ -65,7 +71,7 @@ const ConfettiAnimation: React.FC<ConfettiProps> = ({ show, onComplete }) => {
               key={i}
               className="absolute text-4xl pointer-events-none"
               initial={{
-                x: Math.random() * windowSize.width,
+                x: Math.random() * 300,
                 y: -50,
                 rotate: 0,
               }}

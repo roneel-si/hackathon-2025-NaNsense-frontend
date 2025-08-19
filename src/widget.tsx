@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import TriviaQuiz from './components/TriviaQuiz';
+import FloatingButton from './components/FloatingButton';
 import { WidgetConfig } from './types';
 import './index.css';
 
@@ -34,7 +34,7 @@ class TriviaQuizWidget {
     const root = createRoot(this.container);
     root.render(
       <React.StrictMode>
-        <TriviaQuiz config={this.config} />
+        <FloatingButton config={this.config} />
       </React.StrictMode>
     );
   }
@@ -55,34 +55,45 @@ declare global {
 
 window.TriviaQuizWidget = TriviaQuizWidget;
 
-// Auto-initialize if data attributes are present
+// Auto-initialize floating button widget
 document.addEventListener('DOMContentLoaded', () => {
+  // Check if there are any data-trivia-widget elements
   const widgets = document.querySelectorAll('[data-trivia-widget]');
   
-  widgets.forEach((element) => {
-    const config: WidgetConfig = {};
+  if (widgets.length > 0) {
+    // Initialize widgets in containers
+    widgets.forEach((element) => {
+      const config: WidgetConfig = {};
+      
+      // Parse data attributes
+      if (element.getAttribute('data-time-limit')) {
+        config.timeLimit = parseInt(element.getAttribute('data-time-limit') || '30');
+      }
+      
+      if (element.getAttribute('data-theme')) {
+        config.theme = element.getAttribute('data-theme') as 'light' | 'dark';
+      }
+      
+      const primaryColor = element.getAttribute('data-primary-color');
+      if (primaryColor) {
+        config.primaryColor = primaryColor;
+      }
+      
+      const secondaryColor = element.getAttribute('data-secondary-color');
+      if (secondaryColor) {
+        config.secondaryColor = secondaryColor;
+      }
+      
+      new TriviaQuizWidget(element as HTMLElement, config);
+    });
+  } else {
+    // Auto-create floating button widget
+    const floatingContainer = document.createElement('div');
+    floatingContainer.id = 'floating-trivia-widget';
+    document.body.appendChild(floatingContainer);
     
-    // Parse data attributes
-    if (element.getAttribute('data-time-limit')) {
-      config.timeLimit = parseInt(element.getAttribute('data-time-limit') || '30');
-    }
-    
-    if (element.getAttribute('data-theme')) {
-      config.theme = element.getAttribute('data-theme') as 'light' | 'dark';
-    }
-    
-    const primaryColor = element.getAttribute('data-primary-color');
-    if (primaryColor) {
-      config.primaryColor = primaryColor;
-    }
-    
-    const secondaryColor = element.getAttribute('data-secondary-color');
-    if (secondaryColor) {
-      config.secondaryColor = secondaryColor;
-    }
-    
-    new TriviaQuizWidget(element as HTMLElement, config);
-  });
+    new TriviaQuizWidget(floatingContainer, {});
+  }
 });
 
 export default TriviaQuizWidget;
