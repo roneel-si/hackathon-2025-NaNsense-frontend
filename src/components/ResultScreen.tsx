@@ -21,14 +21,14 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
   const isAverage = percentage >= 50;
 
   const getMessage = () => {
-    if (isPerfect) return "🏆 Perfect Score! You're a trivia master! 🏆";
-    if (isGood) return "🎉 Excellent! Great job! 🎉";
-    if (isAverage) return "👍 Good effort! Keep learning! 👍";
-    return "💪 Keep practicing! You'll get better! 💪";
+    if (isPerfect) return "🏆 Perfect Score! You're a Rajasthan Royals legend! 🏆";
+    if (isGood) return "🎉 Excellent! Great cricket knowledge! 🎉";
+    if (isAverage) return "👍 Good effort! Keep learning cricket! 👍";
+    return "💪 Keep practicing! You'll become a cricket expert! 💪";
   };
 
   const getEmoji = () => {
-    if (isPerfect) return "👑";
+    if (isPerfect) return "🏏";
     if (isGood) return "🌟";
     if (isAverage) return "⭐";
     return "💪";
@@ -55,7 +55,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         animate={{ y: 0, rotate: 0 }}
         transition={{ duration: 0.8, type: "spring" }}
       >
-        <div className="text-8xl">{getEmoji()}</div>
+        <div className="text-8xl cricket-bounce">{getEmoji()}</div>
       </motion.div>
 
       {/* Score Display */}
@@ -65,18 +65,18 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+        <h2 className="text-3xl font-bold rr-pink mb-2">
           Quiz Complete!
         </h2>
         <p className="text-lg text-gray-600 mb-4">
           {getMessage()}
         </p>
         
-        <div className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-2xl p-6 mb-4">
+        <div className="rr-gradient text-white rounded-2xl p-6 mb-4 shadow-xl">
           <div className="text-4xl font-bold mb-2">
             {score}/{totalQuestions}
           </div>
-          <div className="text-xl">
+          <div className="text-xl rr-gold font-semibold">
             {percentage}%
           </div>
         </div>
@@ -109,9 +109,9 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
       >
-        <div className="bg-gray-200 rounded-full h-3 mb-2">
+        <div className="bg-gray-200 rounded-full h-3 mb-2 shadow-inner">
           <motion.div
-            className="bg-gradient-to-r from-primary-500 to-secondary-500 h-3 rounded-full"
+            className="rr-gradient h-3 rounded-full shadow-lg"
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}
             transition={{ duration: 1, delay: 1 }}
@@ -133,7 +133,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
       >
         <motion.button
           onClick={onRestart}
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center space-x-2"
+          className="flex-1 rr-bg-pink hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center space-x-2 shadow-lg"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -144,7 +144,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         {onShare && (
           <motion.button
             onClick={onShare}
-            className="flex-1 bg-secondary-600 hover:bg-secondary-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center space-x-2"
+            className="flex-1 rr-bg-blue hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center space-x-2 shadow-lg"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -162,10 +162,22 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
         transition={{ delay: 1.5 }}
       >
         {isPerfect 
-          ? "You're absolutely incredible! 🚀"
-          : "Every quiz makes you smarter! 🧠"
+          ? "You're absolutely incredible! A true cricket master! 🚀"
+          : "Every quiz makes you a better cricket fan! 🧠"
         }
       </motion.p>
+
+      {/* Rajasthan Royals branding */}
+      <motion.div
+        className="mt-6 pt-4 border-t border-gray-200"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.8 }}
+      >
+        <p className="text-xs text-gray-400">
+          🏏 Powered by Rajasthan Royals Trivia
+        </p>
+      </motion.div>
     </motion.div>
   );
 };

@@ -3,95 +3,430 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Floating Button Test</title>
+    <title>Rajasthan Royals - Trivia Widget Test</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 50%, #3f51b5 100%);
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        /* Animated background elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(233, 30, 99, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(63, 81, 181, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: backgroundShift 20s ease-in-out infinite;
         }
-        h1 {
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(1deg); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            padding: 20px 0;
             text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #ffd700;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #e91e63, #ffd700, #3f51b5);
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            color: #e91e63;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '🏏';
+            font-size: 1.5rem;
+        }
+
+        .test-info {
+            background: linear-gradient(135deg, #f3e5f5, #e8eaf6);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #e91e63;
+            margin: 25px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .test-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(233, 30, 99, 0.05) 50%, transparent 70%);
+            animation: infoShimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes infoShimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .test-info strong {
+            color: #e91e63;
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .test-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .test-info li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
             color: #333;
         }
-        .test-info {
-            background: #f0f9ff;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #0ea5e9;
-            margin: 20px 0;
+
+        .test-info li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #e91e63;
+            font-weight: bold;
         }
-        
-        .width-indicator {
-            background: rgba(255, 107, 53, 0.1);
-            border: 2px dashed #ff6b35;
-            height: 4px;
-            margin: 20px 0;
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
             position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
-        
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 15px;
+            padding: 2px;
+            background: linear-gradient(135deg, #e91e63, #ffd700, #3f51b5);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .feature-card h4 {
+            color: #e91e63;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .status-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .status-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .status-list li:last-child {
+            border-bottom: none;
+        }
+
+        .status-list li::before {
+            content: '✅';
+            font-size: 1.2rem;
+        }
+
+        .width-indicator {
+            background: linear-gradient(90deg, #e91e63, #ffd700, #3f51b5);
+            height: 6px;
+            margin: 30px 0;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
         .width-indicator::before {
             content: "80% of screen width";
             position: absolute;
-            top: -25px;
+            top: -35px;
             left: 50%;
             transform: translateX(-50%);
-            background: #ff6b35;
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .width-indicator::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: loading 2s infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+        }
+
+        .cricket-decoration {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            opacity: 0.1;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(10px); }
+        }
+
+        .cricket-decoration:nth-child(2) {
+            top: 20%;
+            right: 10%;
+            animation-delay: 1s;
+        }
+
+        .cricket-decoration:nth-child(3) {
+            top: 80%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+                margin: 20px auto;
+            }
+            
+            .main-card {
+                padding: 25px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Cricket decorations -->
+    <div class="cricket-decoration">🏏</div>
+    <div class="cricket-decoration">🏏</div>
+    <div class="cricket-decoration">🏏</div>
+
+    <div class="header">
+        <h1>Rajasthan Royals</h1>
+        <div class="subtitle">Trivia Widget Testing Ground</div>
+    </div>
+
     <div class="container">
-        <h1>🧪 Floating Button Test</h1>
-        
-        <div class="test-info">
-            <strong>Test Instructions:</strong>
-            <ul>
-                <li>Look for a floating button in the bottom-right corner</li>
-                <li>It should have a brain icon and orange/gold gradient</li>
-                <li>Click it to open the trivia quiz popup</li>
-                <li>The button should have smooth animations</li>
-            </ul>
+        <div class="main-card">
+            <div class="section">
+                <h2 class="section-title">Widget Testing Instructions</h2>
+                
+                <div class="test-info">
+                    <strong>🎯 What to Look For:</strong>
+                    <ul>
+                        <li>A floating button in the bottom-right corner with brain icon</li>
+                        <li>Rajasthan Royals inspired orange/gold gradient design</li>
+                        <li>Smooth entrance animations and hover effects</li>
+                        <li>Click to open the trivia quiz popup interface</li>
+                        <li>Responsive design that works on all screen sizes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Expected Behavior</h2>
+                
+                <ul class="status-list">
+                    <li>Floating button appears in bottom-right corner</li>
+                    <li>Button features brain icon and Rajasthan Royals colors</li>
+                    <li>Smooth entrance animation with bounce effect</li>
+                    <li>Clicking opens trivia quiz popup with backdrop</li>
+                    <li>Popup includes close button and proper overlay</li>
+                    <li>Responsive design adapts to different screen sizes</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">API Integration Features</h2>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🔗 Data Fetching</h4>
+                        <p>Fetches questions from http://localhost:3001/fetch-sports-trivia with proper error handling and loading states.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h4>🎯 Question Types</h4>
+                        <p>Supports both single and multiple choice questions with visual indicators and appropriate UI controls.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h4>⚡ Performance</h4>
+                        <p>Shows loading state while fetching data and gracefully falls back to default questions if API fails.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h4>🎨 Visual Feedback</h4>
+                        <p>Displays "Multiple Choice" badge for multi-select questions and provides clear user feedback throughout.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="width-indicator"></div>
+            
+            <div class="test-info">
+                <strong>🔧 Troubleshooting:</strong>
+                <ul>
+                    <li>If the floating button doesn't appear, check the browser console for errors</li>
+                    <li>Ensure the widget script is properly loaded from dist/widget.umd.js</li>
+                    <li>Verify that React and ReactDOM are available</li>
+                    <li>Check network connectivity for API calls</li>
+                </ul>
+            </div>
         </div>
-        
-        <p>This page tests the floating button widget. The button should appear automatically in the bottom-right corner of the screen.</p>
-        
-        <h3>Expected Behavior:</h3>
-        <ul>
-            <li>✅ Floating button appears in bottom-right corner</li>
-            <li>✅ Button has brain icon and Rajasthan Royals colors</li>
-            <li>✅ Smooth entrance animation</li>
-            <li>✅ Clicking opens trivia quiz popup</li>
-            <li>✅ Popup has close button and backdrop</li>
-        </ul>
-        
-        <p><strong>If you don't see the button, check the browser console for errors.</strong></p>
-        
-        <div class="test-info">
-            <strong>API Integration:</strong>
-            <ul>
-                <li>✅ Fetches questions from http://localhost:3001/fetch-sports-trivia</li>
-                <li>✅ Supports both single and multiple choice questions</li>
-                <li>✅ Shows loading state while fetching</li>
-                <li>✅ Falls back to default questions if API fails</li>
-                <li>✅ Displays "Multiple Choice" badge for multi-select questions</li>
-            </ul>
-        </div>
+    </div>
+
+    <div class="footer">
+        <p>🏏 Rajasthan Royals Trivia Widget • Built with React & TypeScript</p>
     </div>
 
     <!-- Include React and ReactDOM -->
@@ -106,7 +441,7 @@
     
     <!-- The floating button should appear automatically -->
     <script>
-        console.log('Widget script loaded. Floating button should appear shortly...');
+        console.log('🏏 Rajasthan Royals Widget script loaded. Floating button should appear shortly...');
         
         // Check if widget loaded after 2 seconds
         setTimeout(() => {

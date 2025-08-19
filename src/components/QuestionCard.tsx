@@ -71,7 +71,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         ? question.correctAnswer 
         : [question.correctAnswer];
       
-      if (correctAnswers.includes(index)) return '✅';
+      if (correctAnswers.includes(index)) return '🏏';
       if (selectedAnswer === index && !correctAnswers.includes(index)) return '❌';
       return '';
     } else {
@@ -80,7 +80,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         ? question.correctAnswer 
         : question.correctAnswer[0];
       
-      if (index === correctAnswer) return '✅';
+      if (index === correctAnswer) return '🏏';
       if (selectedAnswer === index && index !== correctAnswer) return '❌';
       return '';
     }
@@ -140,17 +140,19 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     <div
       ref={cardRef}
       className="quiz-card transform-gpu"
-      style={{
-        background: 'linear-gradient(135deg, #fff7ed 0%, #fefce8 100%)',
-        boxShadow: '0 20px 40px rgba(255, 107, 53, 0.1)',
-        border: '2px solid rgba(255, 107, 53, 0.1)'
-      }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-center mb-3 sm:mb-4">
-        <span className="text-xs sm:text-sm font-medium text-gray-600">
-          Question {questionNumber}/{totalQuestions}
-        </span>
+      {/* Header with Rajasthan Royals branding */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center space-x-2">
+          <span className="text-xs sm:text-sm font-medium rr-pink">
+            🏏 Question {questionNumber}/{totalQuestions}
+          </span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs sm:text-sm font-medium rr-blue">
+            Rajasthan Royals
+          </span>
+        </div>
       </div>
 
       {/* Timer */}
@@ -165,29 +167,24 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           {question.question}
         </h2>
         {question.multipleChoice && (
-          <div className="mt-2 inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-            Multiple Choice
+          <div className="mt-3 inline-block rr-gradient text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg">
+            🎯 Multiple Choice
           </div>
         )}
       </div>
 
       {/* Options */}
-      <div ref={optionsRef} className="space-y-2 sm:space-y-3">
+      <div ref={optionsRef} className="space-y-3 sm:space-y-4">
         {question.options.map((option, index) => (
           <button
             key={index}
             className={`option-button ${getOptionClass(index)} transform-gpu`}
             onClick={() => !isAnswered && onAnswerSelect(index)}
             disabled={isAnswered}
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-              boxShadow: '0 4px 15px rgba(255, 107, 53, 0.1)',
-              border: '2px solid rgba(255, 107, 53, 0.1)'
-            }}
           >
             <div className="flex items-center justify-between">
               <span className="font-medium text-sm sm:text-base">{option}</span>
-              <span className="text-lg sm:text-xl">{getEmoji(index)}</span>
+              <span className="text-lg sm:text-xl cricket-bounce">{getEmoji(index)}</span>
             </div>
           </button>
         ))}
@@ -195,7 +192,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 
       {/* Feedback */}
       {isAnswered && (
-        <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-lg text-center transform-gpu">
+        <div className="mt-4 sm:mt-6 p-4 sm:p-5 rounded-xl text-center transform-gpu">
           {(() => {
             let isCorrect = false;
             let correctAnswerText = '';
@@ -215,12 +212,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             }
             
             return isCorrect ? (
-              <div className="text-green-600 font-semibold bg-green-50 p-2 sm:p-3 rounded-xl border border-green-200 text-sm sm:text-base">
-                🎉 Correct! Well done! 🎉
+              <div className="text-green-600 font-semibold bg-green-50 p-3 sm:p-4 rounded-xl border-2 border-green-200 text-sm sm:text-base shadow-lg">
+                🏏 Excellent! That's the right answer! 🏏
               </div>
             ) : (
-              <div className="text-red-600 font-semibold bg-red-50 p-2 sm:p-3 rounded-xl border border-red-200 text-sm sm:text-base">
-                😔 Wrong! The correct answer was: {correctAnswerText}
+              <div className="text-red-600 font-semibold bg-red-50 p-3 sm:p-4 rounded-xl border-2 border-red-200 text-sm sm:text-base shadow-lg">
+                😔 Not quite! The correct answer was: <span className="font-bold">{correctAnswerText}</span>
               </div>
             );
           })()}
