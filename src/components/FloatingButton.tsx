@@ -120,7 +120,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ config = {} }) => {
       {isOpen && (
         <div
           ref={popupRef}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[calc(100vw-2rem)] sm:w-full max-w-md"
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-[80vw] max-w-[1200px]"
         >
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto">
             {/* Header */}

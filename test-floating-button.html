@@ -31,6 +31,28 @@
             border-left: 4px solid #0ea5e9;
             margin: 20px 0;
         }
+        
+        .width-indicator {
+            background: rgba(255, 107, 53, 0.1);
+            border: 2px dashed #ff6b35;
+            height: 4px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .width-indicator::before {
+            content: "80% of screen width";
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff6b35;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
