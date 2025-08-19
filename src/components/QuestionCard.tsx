@@ -29,61 +29,51 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       return selectedAnswer === index ? 'selected' : '';
     }
     
-    // Handle multiple choice questions
-    if (question.multipleChoice) {
-      const correctAnswers = Array.isArray(question.correctAnswer) 
-        ? question.correctAnswer 
-        : [question.correctAnswer];
-      
-      if (correctAnswers.includes(index)) {
-        return 'correct';
-      }
-      
-      if (selectedAnswer === index && !correctAnswers.includes(index)) {
-        return 'incorrect';
-      }
-      
-      return '';
-    } else {
-      // Handle single choice questions
+    // Handle timeout case (selectedAnswer === -1)
+    if (selectedAnswer === -1) {
+      // Show correct answer when timeout occurs
       const correctAnswer = Array.isArray(question.correctAnswer) 
         ? question.correctAnswer[0] 
         : question.correctAnswer;
-      
-      if (index === correctAnswer) {
-        return 'correct';
-      }
-      
-      if (selectedAnswer === index && index !== correctAnswer) {
-        return 'incorrect';
-      }
-      
-      return '';
+      return index === correctAnswer ? 'correct' : '';
     }
+    
+    // Handle single choice questions (no more multiple choice)
+    const correctAnswer = Array.isArray(question.correctAnswer) 
+      ? question.correctAnswer[0] 
+      : question.correctAnswer;
+    
+    if (index === correctAnswer) {
+      return 'correct';
+    }
+    
+    if (selectedAnswer === index && index !== correctAnswer) {
+      return 'incorrect';
+    }
+    
+    return '';
   };
 
   const getEmoji = (index: number) => {
     if (!isAnswered) return '';
     
-    // Handle multiple choice questions
-    if (question.multipleChoice) {
-      const correctAnswers = Array.isArray(question.correctAnswer) 
-        ? question.correctAnswer 
-        : [question.correctAnswer];
-      
-      if (correctAnswers.includes(index)) return '🏏';
-      if (selectedAnswer === index && !correctAnswers.includes(index)) return '❌';
-      return '';
-    } else {
-      // Handle single choice questions
+    // Handle timeout case (selectedAnswer === -1)
+    if (selectedAnswer === -1) {
+      // Show correct answer emoji when timeout occurs
       const correctAnswer = typeof question.correctAnswer === 'number' 
         ? question.correctAnswer 
         : question.correctAnswer[0];
-      
-      if (index === correctAnswer) return '🏏';
-      if (selectedAnswer === index && index !== correctAnswer) return '❌';
-      return '';
+      return index === correctAnswer ? '🏏' : '';
     }
+    
+    // Handle single choice questions (no more multiple choice)
+    const correctAnswer = typeof question.correctAnswer === 'number' 
+      ? question.correctAnswer 
+      : question.correctAnswer[0];
+    
+    if (index === correctAnswer) return '🏏';
+    if (selectedAnswer === index && index !== correctAnswer) return '❌';
+    return '';
   };
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -166,11 +156,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         >
           {question.question}
         </h2>
-        {question.multipleChoice && (
-          <div className="mt-3 inline-block rr-gradient text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg">
-            🎯 Multiple Choice
-          </div>
-        )}
       </div>
 
       {/* Options */}
@@ -194,22 +179,26 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       {isAnswered && (
         <div className="mt-4 sm:mt-6 p-4 sm:p-5 rounded-xl text-center transform-gpu">
           {(() => {
-            let isCorrect = false;
-            let correctAnswerText = '';
-            
-            if (question.multipleChoice) {
-              const correctAnswers = Array.isArray(question.correctAnswer) 
-                ? question.correctAnswer 
-                : [question.correctAnswer];
-              isCorrect = correctAnswers.includes(selectedAnswer || -1);
-              correctAnswerText = correctAnswers.map(index => question.options[index]).join(', ');
-            } else {
+            // Handle timeout case
+            if (selectedAnswer === -1) {
               const correctAnswer = Array.isArray(question.correctAnswer) 
                 ? question.correctAnswer[0] 
                 : question.correctAnswer;
-              isCorrect = selectedAnswer === correctAnswer;
-              correctAnswerText = question.options[correctAnswer];
+              const correctAnswerText = question.options[correctAnswer];
+              
+              return (
+                <div className="text-orange-600 font-semibold bg-orange-50 p-3 sm:p-4 rounded-xl border-2 border-orange-200 text-sm sm:text-base shadow-lg">
+                  ⏰ Time's up! The correct answer was: <span className="font-bold">{correctAnswerText}</span>
+                </div>
+              );
             }
+            
+            // Handle normal answer cases
+            const correctAnswer = Array.isArray(question.correctAnswer) 
+              ? question.correctAnswer[0] 
+              : question.correctAnswer;
+            const isCorrect = selectedAnswer === correctAnswer;
+            const correctAnswerText = question.options[correctAnswer];
             
             return isCorrect ? (
               <div className="text-green-600 font-semibold bg-green-50 p-3 sm:p-4 rounded-xl border-2 border-green-200 text-sm sm:text-base shadow-lg">

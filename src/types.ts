@@ -11,7 +11,6 @@ export interface Question {
 export interface APIQuestion {
   Question: string;
   Options: string[];
-  multipleChoice: boolean;
   Answer: string[];
 }
 
@@ -22,7 +21,7 @@ export interface APIResponse {
 export interface QuizState {
   currentQuestionIndex: number;
   score: number;
-  selectedAnswer: number | null;
+  selectedAnswer: number | null; // null = no selection, -1 = timeout, 0+ = selected answer index
   isAnswered: boolean;
   timeLeft: number;
   isGameOver: boolean;

@@ -62,11 +62,12 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     const timer = setInterval(() => {
       setState(prev => {
         if (prev.timeLeft <= 1) {
-          // Time's up - mark as answered and move to next question
+          // Time's up - mark as answered with timeout (no answer selected)
           return {
             ...prev,
             timeLeft: 0,
-            isAnswered: true
+            isAnswered: true,
+            selectedAnswer: -1 // Use -1 to indicate timeout (no answer selected)
           };
         }
         return {
@@ -83,18 +84,8 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   const handleAnswerSelect = useCallback((answerIndex: number) => {
     if (state.isAnswered) return;
 
-    let isCorrect = false;
-    
-    if (currentQuestion.multipleChoice) {
-      // For multiple choice, check if the selected answer is in the correct answers array
-      const correctAnswers = Array.isArray(currentQuestion.correctAnswer) 
-        ? currentQuestion.correctAnswer 
-        : [currentQuestion.correctAnswer];
-      isCorrect = correctAnswers.includes(answerIndex);
-    } else {
-      // For single choice, check if the selected answer matches the correct answer
-      isCorrect = answerIndex === currentQuestion.correctAnswer;
-    }
+    // For single choice, check if the selected answer matches the correct answer
+    const isCorrect = answerIndex === currentQuestion.correctAnswer;
     
     setState(prev => ({
       ...prev,
@@ -124,7 +115,8 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       
       // Call completion callback
       if (onComplete) {
-        onComplete(state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0), questions.length);
+        const finalScore = state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
+        onComplete(finalScore, questions.length);
       }
     }
   }, [state.currentQuestionIndex, state.score, state.selectedAnswer, currentQuestion, questions.length, timeLimit, onComplete]);
@@ -144,7 +136,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
 
   // Handle share
   const handleShare = useCallback(() => {
-    const score = state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
+    const score = state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
     const percentage = Math.round((score / questions.length) * 100);
     
     const text = `🎉 I scored ${score}/${questions.length} (${percentage}%) on the Sports Trivia Quiz! Can you beat my score? 🏆`;
@@ -165,7 +157,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   // Auto-advance after showing answer
   useEffect(() => {
     if (state.isAnswered && !state.isGameOver) {
-      const timer = setTimeout(handleNext, 2000);
+      const timer = setTimeout(handleNext, 5000); // Increased from 2000ms to 5000ms (5 seconds)
       return () => clearTimeout(timer);
     }
   }, [state.isAnswered, state.isGameOver, handleNext]);
@@ -209,7 +201,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       <ConfettiAnimation 
         show={state.showConfetti} 
         onComplete={() => setState(prev => ({ ...prev, showConfetti: false }))}
-        score={state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0)}
+        score={state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0)}
         totalQuestions={questions.length}
       />
       
@@ -242,7 +234,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
             transition={{ duration: 0.3 }}
           >
             <ResultScreen
-              score={state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0)}
+              score={state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0)}
               totalQuestions={questions.length}
               onRestart={handleRestart}
               onShare={handleShare}
