@@ -6,6 +6,7 @@ import { fetchQuestionsFromAPI } from '../utils/apiUtils';
 import QuestionCard from './QuestionCard';
 import ResultScreen from './ResultScreen';
 import ConfettiAnimation from './Confetti';
+import StartScreen from './StartScreen';
 
 interface TriviaQuizProps {
   config?: WidgetConfig;
@@ -22,6 +23,8 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   const [questions, setQuestions] = useState<Question[]>(providedQuestions || defaultQuestions);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showStartScreen, setShowStartScreen] = useState(true);
+  const [questionsFetched, setQuestionsFetched] = useState(false);
 
   const [state, setState] = useState<QuizState>({
     currentQuestionIndex: 0,
@@ -45,13 +48,17 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
         .then(fetchedQuestions => {
           setQuestions(fetchedQuestions);
           setIsLoading(false);
+          setQuestionsFetched(true);
         })
         .catch(err => {
           console.error('Failed to fetch questions:', err);
           setError('Failed to load questions. Using default questions.');
           setQuestions(defaultQuestions);
           setIsLoading(false);
+          setQuestionsFetched(true);
         });
+    } else if (providedQuestions) {
+      setQuestionsFetched(true);
     }
   }, [apiUrl, providedQuestions]);
 
@@ -121,6 +128,11 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     }
   }, [state.currentQuestionIndex, state.score, state.selectedAnswer, currentQuestion, questions.length, timeLimit, onComplete]);
 
+  // Handle start quiz
+  const handleStart = useCallback(() => {
+    setShowStartScreen(false);
+  }, []);
+
   // Handle restart
   const handleRestart = useCallback(() => {
     setState({
@@ -132,6 +144,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       isGameOver: false,
       showConfetti: false
     });
+    setShowStartScreen(true);
   }, [timeLimit]);
 
   // Handle share
@@ -172,8 +185,19 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     }
   }, [state.showConfetti]);
 
-  // Show loading state
-  if (isLoading) {
+  // Show start screen
+  if (showStartScreen) {
+    return (
+      <div className="widget-container">
+        <StartScreen 
+          onStart={handleStart}
+        />
+      </div>
+    );
+  }
+
+  // Show loading state (only if we're past start screen and still loading)
+  if (isLoading && !questionsFetched) {
     return (
       <div className="widget-container">
         <div className="quiz-card text-center">
