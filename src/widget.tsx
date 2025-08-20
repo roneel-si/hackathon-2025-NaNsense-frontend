@@ -1,7 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import FloatingButton from './components/FloatingButton';
-import StadiumFloatingButton from './components/StadiumFloatingButton';
 import { WidgetConfig } from './types';
 import './index.css';
 
@@ -37,7 +36,6 @@ class TriviaQuizWidget {
       <React.StrictMode>
         <div>
           <FloatingButton config={this.config} />
-          <StadiumFloatingButton />
         </div>
       </React.StrictMode>
     );
