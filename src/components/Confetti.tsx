@@ -43,7 +43,7 @@ const ConfettiAnimation: React.FC<ConfettiProps> = ({
   
   // Determine confetti theme based on score
   const getConfettiTheme = () => {
-    if (percentage >= 80) {
+    if (percentage >= 75) {
       return {
         name: 'excellent',
         colors: ['#e91e63', '#ffd700', '#3f51b5', '#9c27b0', '#4caf50', '#ff9800'],

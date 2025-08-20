@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QuizState, WidgetConfig, Question } from '../types';
+import { QuizState, WidgetConfig } from '../types';
 import { defaultQuestions } from '../data/questions';
 import { fetchQuestionsFromAPI } from '../utils/apiUtils';
+import { shuffleAllQuestions, ShuffledQuestion } from '../utils/shuffleUtils';
 import QuestionCard from './QuestionCard';
 import ResultScreen from './ResultScreen';
 import ConfettiAnimation from './Confetti';
@@ -20,7 +21,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     onComplete
   } = config;
 
-  const [questions, setQuestions] = useState<Question[]>(providedQuestions || defaultQuestions);
+  const [questions, setQuestions] = useState<ShuffledQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showStartScreen, setShowStartScreen] = useState(true);
@@ -38,6 +39,14 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
 
   const currentQuestion = questions[state.currentQuestionIndex];
 
+  // Initialize questions with shuffling
+  useEffect(() => {
+    const questionsToUse = providedQuestions || defaultQuestions;
+    const shuffledQuestions = shuffleAllQuestions(questionsToUse);
+    setQuestions(shuffledQuestions);
+    setQuestionsFetched(true);
+  }, [providedQuestions]);
+
   // Fetch questions from API if apiUrl is provided
   useEffect(() => {
     if (apiUrl && !providedQuestions) {
@@ -46,19 +55,19 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       
       fetchQuestionsFromAPI(apiUrl)
         .then(fetchedQuestions => {
-          setQuestions(fetchedQuestions);
+          const shuffledQuestions = shuffleAllQuestions(fetchedQuestions);
+          setQuestions(shuffledQuestions);
           setIsLoading(false);
           setQuestionsFetched(true);
         })
         .catch(err => {
           console.error('Failed to fetch questions:', err);
           setError('Failed to load questions. Using default questions.');
-          setQuestions(defaultQuestions);
+          const shuffledQuestions = shuffleAllQuestions(defaultQuestions);
+          setQuestions(shuffledQuestions);
           setIsLoading(false);
           setQuestionsFetched(true);
         });
-    } else if (providedQuestions) {
-      setQuestionsFetched(true);
     }
   }, [apiUrl, providedQuestions]);
 
@@ -114,16 +123,18 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       }));
     } else {
       // Game over
+      const percentage = Math.round((state.score / questions.length) * 100);
+      const shouldShowConfetti = percentage > 75;
+      
       setState(prev => ({
         ...prev,
         isGameOver: true,
-        showConfetti: true
+        showConfetti: shouldShowConfetti
       }));
       
       // Call completion callback
       if (onComplete) {
-        const finalScore = state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
-        onComplete(finalScore, questions.length);
+        onComplete(state.score, questions.length);
       }
     }
   }, [state.currentQuestionIndex, state.score, state.selectedAnswer, currentQuestion, questions.length, timeLimit, onComplete]);
@@ -135,6 +146,11 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
 
   // Handle restart
   const handleRestart = useCallback(() => {
+    // Reshuffle questions on restart
+    const questionsToUse = providedQuestions || defaultQuestions;
+    const shuffledQuestions = shuffleAllQuestions(questionsToUse);
+    setQuestions(shuffledQuestions);
+    
     setState({
       currentQuestionIndex: 0,
       score: 0,
@@ -145,14 +161,13 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       showConfetti: false
     });
     setShowStartScreen(true);
-  }, [timeLimit]);
+  }, [timeLimit, providedQuestions]);
 
   // Handle share
   const handleShare = useCallback(() => {
-    const score = state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
-    const percentage = Math.round((score / questions.length) * 100);
+    const percentage = Math.round((state.score / questions.length) * 100);
     
-    const text = `🎉 I scored ${score}/${questions.length} (${percentage}%) on the Sports Trivia Quiz! Can you beat my score? 🏆`;
+    const text = `🎉 I scored ${state.score}/${questions.length} (${percentage}%) on the Sports Trivia Quiz! Can you beat my score? 🏆`;
     
     if (navigator.share) {
       navigator.share({
@@ -225,7 +240,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       <ConfettiAnimation 
         show={state.showConfetti} 
         onComplete={() => setState(prev => ({ ...prev, showConfetti: false }))}
-        score={state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0)}
+        score={state.score}
         totalQuestions={questions.length}
       />
       
@@ -258,7 +273,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
             transition={{ duration: 0.3 }}
           >
             <ResultScreen
-              score={state.selectedAnswer === -1 ? state.score : state.score + (state.selectedAnswer === currentQuestion.correctAnswer ? 1 : 0)}
+              score={state.score}
               totalQuestions={questions.length}
               onRestart={handleRestart}
               onShare={handleShare}
