@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import FloatingButton from './components/FloatingButton';
+import TriviaQuiz from './components/TriviaQuiz';
 import { WidgetConfig } from './types';
 import './index.css';
 
@@ -35,7 +35,7 @@ class TriviaQuizWidget {
     root.render(
       <React.StrictMode>
         <div>
-          <FloatingButton config={this.config} />
+          <TriviaQuiz config={this.config} />
         </div>
       </React.StrictMode>
     );
@@ -86,6 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
         config.secondaryColor = secondaryColor;
       }
       
+      const apiUrl = element.getAttribute('data-api-url');
+      if (apiUrl) {
+        config.apiUrl = apiUrl;
+      } else {
+        // Default to the sportziq API
+        config.apiUrl = 'https://sportziq-apis.onrender.com/trivia/generate-sports-trivia';
+      }
+      
       new TriviaQuizWidget(element as HTMLElement, config);
     });
   } else {
@@ -94,7 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
     floatingContainer.id = 'floating-trivia-widget';
     document.body.appendChild(floatingContainer);
     
-    new TriviaQuizWidget(floatingContainer, {});
+    new TriviaQuizWidget(floatingContainer, {
+      apiUrl: 'https://sportziq-apis.onrender.com/trivia/generate-sports-trivia'
+    });
   }
 });
 

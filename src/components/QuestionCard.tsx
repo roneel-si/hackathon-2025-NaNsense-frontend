@@ -1,7 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { gsap } from 'gsap';
+import React, { useEffect, useState } from 'react';
 import { Question } from '../types';
-import Timer from './Timer';
 
 interface QuestionCardProps {
   question: Question;
@@ -12,6 +10,14 @@ interface QuestionCardProps {
   onAnswerSelect: (answerIndex: number) => void;
   questionNumber: number;
   totalQuestions: number;
+  onClose: () => void;
+  onFiftyFifty: () => void;
+  onQuestionFlip: () => void;
+  onExtendTime: () => void;
+  fiftyFiftyUsed: boolean;
+  questionFlipUsed: boolean;
+  extendTimeUsed: boolean;
+  hiddenOptions: number[];
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -22,196 +28,350 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   totalTime,
   onAnswerSelect,
   questionNumber,
-  totalQuestions
+  totalQuestions,
+  onClose,
+  onFiftyFifty,
+  onQuestionFlip,
+  onExtendTime,
+  fiftyFiftyUsed,
+  questionFlipUsed,
+  extendTimeUsed,
+  hiddenOptions
 }) => {
-  const getOptionClass = (index: number) => {
-    if (!isAnswered) {
-      return selectedAnswer === index ? 'selected' : '';
-    }
-    
-    // Handle timeout case (selectedAnswer === -1)
-    if (selectedAnswer === -1) {
-      // Show correct answer when timeout occurs
-      const correctAnswer = Array.isArray(question.correctAnswer) 
-        ? question.correctAnswer[0] 
-        : question.correctAnswer;
-      return index === correctAnswer ? 'correct' : '';
-    }
-    
-    // Handle single choice questions (no more multiple choice)
-    const correctAnswer = Array.isArray(question.correctAnswer) 
-      ? question.correctAnswer[0] 
-      : question.correctAnswer;
-    
-    if (index === correctAnswer) {
-      return 'correct';
-    }
-    
-    if (selectedAnswer === index && index !== correctAnswer) {
-      return 'incorrect';
-    }
-    
-    return '';
-  };
-
-  const getEmoji = (index: number) => {
-    if (!isAnswered) return '';
-    
-    // Handle timeout case (selectedAnswer === -1)
-    if (selectedAnswer === -1) {
-      // Show correct answer emoji when timeout occurs
-      const correctAnswer = typeof question.correctAnswer === 'number' 
-        ? question.correctAnswer 
-        : question.correctAnswer[0];
-      return index === correctAnswer ? '🏏' : '';
-    }
-    
-    // Handle single choice questions (no more multiple choice)
-    const correctAnswer = typeof question.correctAnswer === 'number' 
-      ? question.correctAnswer 
-      : question.correctAnswer[0];
-    
-    if (index === correctAnswer) return '🏏';
-    if (selectedAnswer === index && index !== correctAnswer) return '❌';
-    return '';
-  };
-
-  const cardRef = useRef<HTMLDivElement>(null);
-  const questionRef = useRef<HTMLHeadingElement>(null);
-  const optionsRef = useRef<HTMLDivElement>(null);
+  const [animateOptions, setAnimateOptions] = useState(false);
 
   useEffect(() => {
-    // Card entrance animation
-    gsap.fromTo(cardRef.current,
-      { 
-        opacity: 0, 
-        y: 30,
-        scale: 0.95,
-        rotationY: -8
-      },
-      { 
-        opacity: 1, 
-        y: 0,
-        scale: 1,
-        rotationY: 0,
-        duration: 2.0, 
-        ease: "back.out(1.2)"
-      }
-    );
+    // Reset animation state for new question
+    setAnimateOptions(false);
+    
+    // Animate options after a short delay
+    const timer = setTimeout(() => setAnimateOptions(true), 100);
+    return () => clearTimeout(timer);
+  }, [questionNumber]); // Use questionNumber instead of question to ensure consistent timing
 
-    // Question text animation
-    gsap.fromTo(questionRef.current,
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 1.5, delay: 0.8, ease: "power2.out" }
-    );
+  const getOptionClass = (index: number) => {
+    let className = 'option';
+    if (animateOptions) className += ' animate';
+    if (isAnswered) className += ' disabled';
+    if (selectedAnswer === index) className += ' selected';
+    if (isAnswered && index === question.correctAnswer) className += ' correct';
+    if (isAnswered && selectedAnswer === index && index !== question.correctAnswer) className += ' incorrect';
+    if (hiddenOptions.includes(index)) className += ' hidden';
+    return className;
+  };
 
-    // Options staggered animation
-    if (optionsRef.current?.children) {
-      gsap.fromTo(optionsRef.current.children,
-        { 
-          opacity: 0, 
-          x: -20,
-          scale: 0.95
-        },
-        { 
-          opacity: 1, 
-          x: 0,
-          scale: 1,
-          duration: 1.2, 
-          stagger: 0.3,
-          delay: 1.5,
-          ease: "back.out(1.2)"
-        }
-      );
-    }
-  }, [question]);
+  const getTimerColor = () => {
+    if (timeLeft <= 5) return '#ff4444';
+    return '#ffd700';
+  };
 
   return (
-    <div
-      ref={cardRef}
-      className="quiz-card transform-gpu"
-    >
-      {/* Header with Rajasthan Royals branding */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <div className="flex items-center space-x-2">
-          <span className="text-xs sm:text-sm font-medium rr-pink">
-            🏏 Question {questionNumber}/{totalQuestions}
-          </span>
+    <div className="quiz-game">
+      {/* Quiz Header */}
+      <div 
+        className="quiz-header"
+        style={{
+          background: 'linear-gradient(135deg, #e91e63, #ff6b9d)',
+          padding: '25px',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <button 
+          className="close-btn" 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '15px',
+            right: '20px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            border: 'none',
+            color: 'white',
+            width: '35px',
+            height: '35px',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            fontSize: '20px',
+            zIndex: 3,
+            transition: 'all 0.3s ease'
+          }}
+        >
+          &times;
+        </button>
+        <div 
+          className="quiz-title"
+          style={{
+            fontSize: '28px',
+            fontWeight: 700,
+            color: 'white',
+            marginBottom: '10px',
+            position: 'relative',
+            zIndex: 2
+          }}
+        >
+          🏏 RR Quiz Challenge
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-xs sm:text-sm font-medium rr-blue">
-            Rajasthan Royals
-          </span>
+        <div 
+          className="quiz-subtitle"
+          style={{
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: '16px',
+            position: 'relative',
+            zIndex: 2
+          }}
+        >
+          Test your Rajasthan Royals knowledge!
         </div>
       </div>
 
-      {/* Timer */}
-      <Timer timeLeft={timeLeft} totalTime={totalTime} isActive={!isAnswered} />
+      {/* Timer and Question Counter */}
+      <div 
+        className="timer-container"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '20px 30px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        }}
+      >
+        <div 
+          className="question-counter"
+          style={{
+            background: 'linear-gradient(90deg, #ffd700, #ffed4e)',
+            color: '#1a1a2e',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            fontWeight: 600,
+            fontSize: '14px'
+          }}
+        >
+          Question {questionNumber} of {totalQuestions}
+        </div>
+        <div 
+          className="timer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '15px',
+            color: 'white',
+            fontWeight: 600
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>⏱️</span>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: getTimerColor() }}>
+              {timeLeft}s
+            </span>
+          </div>
+          <div 
+            className="timer-progress-container"
+            style={{
+              width: '120px',
+              height: '8px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            <div 
+              className="timer-progress-bar"
+              style={{
+                height: '100%',
+                background: timeLeft <= 5 
+                  ? 'linear-gradient(90deg, #ff4444, #ff6666)' 
+                  : 'linear-gradient(90deg, #ffd700, #ffed4e)',
+                borderRadius: '4px',
+                transition: 'all 0.3s ease',
+                width: `${(timeLeft / totalTime) * 100}%`,
+                boxShadow: timeLeft <= 5 
+                  ? '0 0 10px rgba(255, 68, 68, 0.5)' 
+                  : '0 0 10px rgba(255, 215, 0, 0.3)'
+              }}
+            />
+            {timeLeft <= 5 && (
+              <div 
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                  animation: 'timerPulse 0.8s ease-in-out infinite'
+                }}
+              />
+            )}
+          </div>
+        </div>
+      </div>
 
-      {/* Question */}
-      <div className="mb-4 sm:mb-6">
-        <h2
-          ref={questionRef}
-          className="text-lg sm:text-xl font-bold text-gray-800 leading-relaxed"
+      {/* Lifelines */}
+      <div 
+        className="lifelines"
+        style={{
+          display: 'flex',
+          gap: '15px',
+          justifyContent: 'center',
+          padding: '20px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        }}
+      >
+        <div 
+          className={`lifeline ${fiftyFiftyUsed ? 'used' : ''}`}
+          onClick={!fiftyFiftyUsed && !isAnswered ? onFiftyFifty : undefined}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '2px solid #ffd700',
+            color: 'white',
+            padding: '10px 15px',
+            borderRadius: '25px',
+            cursor: fiftyFiftyUsed || isAnswered ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            fontSize: '14px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            opacity: fiftyFiftyUsed ? 0.3 : 1,
+            borderColor: fiftyFiftyUsed ? '#666' : '#ffd700'
+          }}
+        >
+          <span className="lifeline-icon" style={{ fontSize: '16px' }}>⚡</span>
+          <span>50:50</span>
+        </div>
+        <div 
+          className={`lifeline ${questionFlipUsed ? 'used' : ''}`}
+          onClick={!questionFlipUsed && !isAnswered ? onQuestionFlip : undefined}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '2px solid #ffd700',
+            color: 'white',
+            padding: '10px 15px',
+            borderRadius: '25px',
+            cursor: questionFlipUsed || isAnswered ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            fontSize: '14px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            opacity: questionFlipUsed ? 0.3 : 1,
+            borderColor: questionFlipUsed ? '#666' : '#ffd700'
+          }}
+        >
+          <span className="lifeline-icon" style={{ fontSize: '16px' }}>🔄</span>
+          <span>Flip Question</span>
+        </div>
+        <div 
+          className={`lifeline ${extendTimeUsed ? 'used' : ''}`}
+          onClick={!extendTimeUsed && !isAnswered ? onExtendTime : undefined}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '2px solid #ffd700',
+            color: 'white',
+            padding: '10px 15px',
+            borderRadius: '25px',
+            cursor: extendTimeUsed || isAnswered ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            fontSize: '14px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            opacity: extendTimeUsed ? 0.3 : 1,
+            borderColor: extendTimeUsed ? '#666' : '#ffd700'
+          }}
+        >
+          <span className="lifeline-icon" style={{ fontSize: '16px' }}>⏰</span>
+          <span>+10 Seconds</span>
+        </div>
+      </div>
+
+      {/* Quiz Content */}
+      <div 
+        className="quiz-content"
+        style={{ padding: '30px' }}
+      >
+        <div 
+          className="question"
+          style={{
+            color: 'white',
+            fontSize: '20px',
+            fontWeight: 600,
+            marginBottom: '25px',
+            lineHeight: 1.4,
+            minHeight: '60px'
+          }}
         >
           {question.question}
-        </h2>
-      </div>
-
-      {/* Options */}
-      <div ref={optionsRef} className="space-y-3 sm:space-y-4">
-        {question.options.map((option, index) => (
-          <button
-            key={index}
-            className={`option-button ${getOptionClass(index)} transform-gpu`}
-            onClick={() => !isAnswered && onAnswerSelect(index)}
-            disabled={isAnswered}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-sm sm:text-base">{option}</span>
-              <span className="text-lg sm:text-xl cricket-bounce">{getEmoji(index)}</span>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Feedback */}
-      {isAnswered && (
-        <div className="mt-4 sm:mt-6 p-4 sm:p-5 rounded-xl text-center transform-gpu">
-          {(() => {
-            // Handle timeout case
-            if (selectedAnswer === -1) {
-              const correctAnswer = Array.isArray(question.correctAnswer) 
-                ? question.correctAnswer[0] 
-                : question.correctAnswer;
-              const correctAnswerText = question.options[correctAnswer];
-              
-              return (
-                <div className="text-orange-600 font-semibold bg-orange-50 p-3 sm:p-4 rounded-xl border-2 border-orange-200 text-sm sm:text-base shadow-lg">
-                  ⏰ Time's up! The correct answer was: <span className="font-bold">{correctAnswerText}</span>
-                </div>
-              );
-            }
-            
-            // Handle normal answer cases
-            const correctAnswer = Array.isArray(question.correctAnswer) 
-              ? question.correctAnswer[0] 
-              : question.correctAnswer;
-            const isCorrect = selectedAnswer === correctAnswer;
-            const correctAnswerText = question.options[correctAnswer];
-            
-            return isCorrect ? (
-              <div className="text-green-600 font-semibold bg-green-50 p-3 sm:p-4 rounded-xl border-2 border-green-200 text-sm sm:text-base shadow-lg">
-                🏏 Excellent! That's the right answer! 🏏
-              </div>
-            ) : (
-              <div className="text-red-600 font-semibold bg-red-50 p-3 sm:p-4 rounded-xl border-2 border-red-200 text-sm sm:text-base shadow-lg">
-                😔 Not quite! The correct answer was: <span className="font-bold">{correctAnswerText}</span>
-              </div>
-            );
-          })()}
         </div>
-      )}
+        <div 
+          className="options"
+          style={{ display: 'grid', gap: '15px' }}
+        >
+          {question.options.map((option, index) => (
+            <div
+              key={`${questionNumber}-${index}`}
+              className={getOptionClass(index)}
+              onClick={() => !isAnswered && !hiddenOptions.includes(index) && onAnswerSelect(index)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                padding: '15px 20px',
+                borderRadius: '12px',
+                cursor: isAnswered ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                fontSize: '16px',
+                position: 'relative',
+                overflow: 'hidden',
+                opacity: animateOptions ? 1 : 0,
+                transform: animateOptions ? 'translateX(0)' : 'translateX(-100px)',
+                ...(index % 2 === 1 && { transform: animateOptions ? 'translateX(0)' : 'translateX(100px)' })
+              }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quiz Footer */}
+      <div 
+        className="quiz-footer"
+        style={{
+          padding: '20px 30px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <div 
+          className="progress-bar"
+          style={{
+            width: '100%',
+            height: '8px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
+            overflow: 'hidden'
+          }}
+        >
+          <div 
+            className="progress-fill"
+            style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, #ffd700, #ffed4e)',
+              borderRadius: '4px',
+              transition: 'width 0.3s ease',
+              width: `${((questionNumber - 1) / totalQuestions) * 100}%`
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 };

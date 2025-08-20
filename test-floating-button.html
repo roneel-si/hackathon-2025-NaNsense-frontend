@@ -391,7 +391,7 @@
                 <div class="feature-grid">
                     <div class="feature-card">
                         <h4>🔗 Data Fetching</h4>
-                        <p>Fetches questions from http://localhost:3001/trivia/generate-sports-trivia with page title as prompt and proper error handling.</p>
+                        <p>Fetches questions from https://sportziq-apis.onrender.com/trivia/generate-sports-trivia with page title as prompt and proper error handling.</p>
                     </div>
                     
                     <div class="feature-card">
@@ -443,6 +443,8 @@
     <!-- The floating button should appear automatically -->
     <script>
         console.log('🏏 Rajasthan Royals Widget script loaded. Floating button should appear shortly...');
+        console.log('🔗 Widget will fetch questions from: https://sportziq-apis.onrender.com/trivia/generate-sports-trivia');
+        console.log('📄 Page title being sent as prompt:', document.title);
         
         // Check if widget loaded after 2 seconds
         setTimeout(() => {
@@ -453,6 +455,11 @@
                 console.log('❌ Floating widget container not found');
             }
         }, 2000);
+        
+        // Monitor console for API calls
+        setTimeout(() => {
+            console.log('👀 Monitor the browser console for API call logs when you start the quiz...');
+        }, 3000);
     </script>
 </body>
 </html>

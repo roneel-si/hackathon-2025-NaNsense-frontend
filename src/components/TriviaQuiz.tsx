@@ -6,8 +6,9 @@ import { fetchQuestionsFromAPI } from '../utils/apiUtils';
 import { shuffleAllQuestions, ShuffledQuestion } from '../utils/shuffleUtils';
 import QuestionCard from './QuestionCard';
 import ResultScreen from './ResultScreen';
-import ConfettiAnimation from './Confetti';
+import Confetti from './Confetti';
 import StartScreen from './StartScreen';
+import FloatingButton from './FloatingButton';
 
 interface TriviaQuizProps {
   config?: WidgetConfig;
@@ -16,16 +17,14 @@ interface TriviaQuizProps {
 const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   const {
     questions: providedQuestions,
-    timeLimit = 30,
+    timeLimit = 25, // Changed to 25 seconds
     apiUrl,
     onComplete
   } = config;
 
   const [questions, setQuestions] = useState<ShuffledQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showStartScreen, setShowStartScreen] = useState(true);
-  const [questionsFetched, setQuestionsFetched] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
 
   const [state, setState] = useState<QuizState>({
     currentQuestionIndex: 0,
@@ -37,43 +36,24 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     showConfetti: false
   });
 
+  // Lifeline states
+  const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState(false);
+  const [questionFlipUsed, setQuestionFlipUsed] = useState(false);
+  const [extendTimeUsed, setExtendTimeUsed] = useState(false);
+  const [hiddenOptions, setHiddenOptions] = useState<number[]>([]);
+
   const currentQuestion = questions[state.currentQuestionIndex];
 
-  // Initialize questions with shuffling
+  // Initialize with default questions first
   useEffect(() => {
     const questionsToUse = providedQuestions || defaultQuestions;
     const shuffledQuestions = shuffleAllQuestions(questionsToUse);
     setQuestions(shuffledQuestions);
-    setQuestionsFetched(true);
   }, [providedQuestions]);
-
-  // Fetch questions from API if apiUrl is provided
-  useEffect(() => {
-    if (apiUrl && !providedQuestions) {
-      setIsLoading(true);
-      setError(null);
-      
-      fetchQuestionsFromAPI(apiUrl)
-        .then(fetchedQuestions => {
-          const shuffledQuestions = shuffleAllQuestions(fetchedQuestions);
-          setQuestions(shuffledQuestions);
-          setIsLoading(false);
-          setQuestionsFetched(true);
-        })
-        .catch(err => {
-          console.error('Failed to fetch questions:', err);
-          setError('Failed to load questions. Using default questions.');
-          const shuffledQuestions = shuffleAllQuestions(defaultQuestions);
-          setQuestions(shuffledQuestions);
-          setIsLoading(false);
-          setQuestionsFetched(true);
-        });
-    }
-  }, [apiUrl, providedQuestions]);
 
   // Timer effect
   useEffect(() => {
-    if (state.isGameOver || state.isAnswered) return;
+    if (state.isGameOver || state.isAnswered || showStartScreen) return;
 
     const timer = setInterval(() => {
       setState(prev => {
@@ -94,7 +74,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [state.isGameOver, state.isAnswered]);
+  }, [state.isGameOver, state.isAnswered, showStartScreen]);
 
   // Handle answer selection
   const handleAnswerSelect = useCallback((answerIndex: number) => {
@@ -121,10 +101,13 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
         isAnswered: false,
         timeLeft: timeLimit
       }));
+      
+      // Reset lifelines for new question
+      setHiddenOptions([]);
     } else {
       // Game over
       const percentage = Math.round((state.score / questions.length) * 100);
-      const shouldShowConfetti = percentage > 75;
+      const shouldShowConfetti = percentage >= 80;
       
       setState(prev => ({
         ...prev,
@@ -137,12 +120,38 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
         onComplete(state.score, questions.length);
       }
     }
-  }, [state.currentQuestionIndex, state.score, state.selectedAnswer, currentQuestion, questions.length, timeLimit, onComplete]);
+  }, [state.currentQuestionIndex, state.score, currentQuestion, questions.length, timeLimit, onComplete]);
 
   // Handle start quiz
   const handleStart = useCallback(() => {
-    setShowStartScreen(false);
-  }, []);
+    console.log('🚀 Quiz started!');
+    
+    // If API URL is provided and no questions are provided, fetch from API
+    if (apiUrl && !providedQuestions) {
+      console.log('🔗 Fetching questions from API:', apiUrl);
+      console.log('📄 Page title being sent as prompt:', document.title);
+      
+      fetchQuestionsFromAPI(apiUrl)
+        .then(fetchedQuestions => {
+          console.log('✅ API questions received:', fetchedQuestions);
+          const shuffledQuestions = shuffleAllQuestions(fetchedQuestions);
+          setQuestions(shuffledQuestions);
+          console.log('🔀 Questions shuffled and set:', shuffledQuestions);
+          setShowStartScreen(false);
+        })
+        .catch(err => {
+          console.error('❌ Failed to fetch questions from API:', err);
+          console.log('🔄 Falling back to default questions');
+          const shuffledQuestions = shuffleAllQuestions(defaultQuestions);
+          setQuestions(shuffledQuestions);
+          setShowStartScreen(false);
+        });
+    } else {
+      // Use existing questions (default or provided)
+      console.log('ℹ️ Using existing questions (no API call needed)');
+      setShowStartScreen(false);
+    }
+  }, [apiUrl, providedQuestions]);
 
   // Handle restart
   const handleRestart = useCallback(() => {
@@ -160,6 +169,12 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       isGameOver: false,
       showConfetti: false
     });
+    
+    // Reset lifelines
+    setFiftyFiftyUsed(false);
+    setQuestionFlipUsed(false);
+    setExtendTimeUsed(false);
+    
     setShowStartScreen(true);
   }, [timeLimit, providedQuestions]);
 
@@ -167,11 +182,11 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   const handleShare = useCallback(() => {
     const percentage = Math.round((state.score / questions.length) * 100);
     
-    const text = `🎉 I scored ${state.score}/${questions.length} (${percentage}%) on the Sports Trivia Quiz! Can you beat my score? 🏆`;
+    const text = `🎉 I scored ${state.score}/${questions.length} (${percentage}%) on the RR Quiz Challenge! Can you beat my score? 🏆`;
     
     if (navigator.share) {
       navigator.share({
-        title: 'Sports Trivia Quiz',
+        title: 'RR Quiz Challenge',
         text: text,
         url: window.location.href
       });
@@ -180,12 +195,104 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       navigator.clipboard.writeText(text);
       alert('Score copied to clipboard!');
     }
-  }, [state.score, state.selectedAnswer, currentQuestion, questions.length]);
+  }, [state.score, questions.length]);
+
+  // Lifeline functions
+  const handleFiftyFifty = useCallback(() => {
+    if (fiftyFiftyUsed || state.isAnswered) return;
+    
+    setFiftyFiftyUsed(true);
+    
+    const correctIndex = currentQuestion.correctAnswer;
+    const wrongOptions = currentQuestion.options
+      .map((_, index) => index)
+      .filter(index => index !== correctIndex);
+    
+    // Randomly select 2 wrong options to hide
+    const shuffledWrong = wrongOptions.sort(() => Math.random() - 0.5);
+    const toHide = shuffledWrong.slice(0, 2);
+    
+    // Store hidden options for this question
+    setHiddenOptions(toHide);
+  }, [fiftyFiftyUsed, state.isAnswered, currentQuestion]);
+
+  const handleQuestionFlip = useCallback(() => {
+    if (questionFlipUsed || state.isAnswered) return;
+    
+    setQuestionFlipUsed(true);
+    
+    // Create alternate question for the same topic
+    const alternateQuestions = [
+      {
+        question: "What is the home ground of Rajasthan Royals?",
+        options: ["Sawai Mansingh Stadium", "Wankhede Stadium", "Eden Gardens", "M. Chinnaswamy Stadium"],
+        correctAnswer: 0,
+        originalCorrectAnswer: 0,
+        id: 0,
+        category: 'sports',
+        difficulty: 'medium' as const
+      },
+      {
+        question: "Who was the first captain of Rajasthan Royals?",
+        options: ["Shane Warne", "Rahul Dravid", "Ajinkya Rahane", "Steve Smith"],
+        correctAnswer: 0,
+        originalCorrectAnswer: 0,
+        id: 1,
+        category: 'sports',
+        difficulty: 'medium' as const
+      },
+      {
+        question: "What is the primary color of RR's jersey?",
+        options: ["Blue", "Pink", "Red", "Green"],
+        correctAnswer: 1,
+        originalCorrectAnswer: 1,
+        id: 2,
+        category: 'sports',
+        difficulty: 'medium' as const
+      },
+      {
+        question: "Which year did RR win their first IPL title?",
+        options: ["2008", "2009", "2010", "2011"],
+        correctAnswer: 0,
+        originalCorrectAnswer: 0,
+        id: 3,
+        category: 'sports',
+        difficulty: 'medium' as const
+      },
+      {
+        question: "Who is known as RR's 'Mr. 360'?",
+        options: ["Jos Buttler", "Ben Stokes", "Sanju Samson", "Rahul Tewatia"],
+        correctAnswer: 0,
+        originalCorrectAnswer: 0,
+        id: 4,
+        category: 'sports',
+        difficulty: 'medium' as const
+      }
+    ];
+    
+    // Replace current question with alternate
+    const newQuestions = [...questions];
+    newQuestions[state.currentQuestionIndex] = alternateQuestions[state.currentQuestionIndex % alternateQuestions.length];
+    setQuestions(newQuestions);
+    
+    // Reset hidden options for new question
+    setHiddenOptions([]);
+  }, [questionFlipUsed, state.isAnswered, questions, state.currentQuestionIndex]);
+
+  const handleExtendTime = useCallback(() => {
+    if (extendTimeUsed || state.isAnswered) return;
+    
+    setExtendTimeUsed(true);
+    setState(prev => ({
+      ...prev,
+      timeLeft: Math.min(prev.timeLeft + 10, 25) // Cap at 25 seconds
+    }));
+  }, [extendTimeUsed, state.isAnswered]);
 
   // Auto-advance after showing answer
   useEffect(() => {
     if (state.isAnswered && !state.isGameOver) {
-      const timer = setTimeout(handleNext, 3000); // Increased from 2000ms to 5000ms (5 seconds)
+      const timer = setTimeout(handleNext, 2000);
       return () => clearTimeout(timer);
     }
   }, [state.isAnswered, state.isGameOver, handleNext]);
@@ -200,88 +307,118 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     }
   }, [state.showConfetti]);
 
-  // Show start screen
-  if (showStartScreen) {
-    return (
-      <div className="widget-container">
-        <StartScreen 
-          onStart={handleStart}
-        />
-      </div>
-    );
-  }
+  const openQuiz = () => setIsQuizOpen(true);
+  const closeQuiz = () => setIsQuizOpen(false);
 
-  // Show loading state (only if we're past start screen and still loading)
-  if (isLoading && !questionsFetched) {
-    return (
-      <div className="widget-container">
-        <div className="quiz-card text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading questions...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="widget-container">
-        <div className="quiz-card text-center">
-          <div className="text-red-500 mb-4">⚠️</div>
-          <p className="text-gray-600 text-sm">{error}</p>
-        </div>
-      </div>
-    );
+  // Show floating button when quiz is not open
+  if (!isQuizOpen) {
+    return <FloatingButton onClick={openQuiz} />;
   }
 
   return (
-    <div className="widget-container">
-      <ConfettiAnimation 
-        show={state.showConfetti} 
-        onComplete={() => setState(prev => ({ ...prev, showConfetti: false }))}
-        score={state.score}
-        totalQuestions={questions.length}
-      />
-      
-      <AnimatePresence mode="wait">
-        {!state.isGameOver ? (
-          <motion.div
-            key="question"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
-          >
-            <QuestionCard
-              question={currentQuestion}
-              selectedAnswer={state.selectedAnswer}
-              isAnswered={state.isAnswered}
-              timeLeft={state.timeLeft}
-              totalTime={timeLimit}
-              onAnswerSelect={handleAnswerSelect}
-              questionNumber={state.currentQuestionIndex + 1}
-              totalQuestions={questions.length}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="result"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ResultScreen
-              score={state.score}
-              totalQuestions={questions.length}
-              onRestart={handleRestart}
-              onShare={handleShare}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <>
+      {/* Quiz Overlay */}
+      <div 
+        className="quiz-overlay"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000,
+          backdropFilter: 'blur(10px)'
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            closeQuiz();
+          }
+        }}
+      >
+        <div 
+          className="quiz-container"
+          style={{
+            background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+            borderRadius: '20px',
+            padding: 0,
+            width: '90%',
+            maxWidth: '650px',
+            position: 'relative',
+            overflow: 'hidden',
+            border: '2px solid #ffd700',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+          }}
+        >
+          <Confetti 
+            show={state.showConfetti} 
+            onComplete={() => setState(prev => ({ ...prev, showConfetti: false }))}
+          />
+          
+          <AnimatePresence mode="wait">
+            {showStartScreen ? (
+              <motion.div
+                key="start"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+              >
+                <StartScreen 
+                  onStart={handleStart}
+                  onClose={closeQuiz}
+                />
+              </motion.div>
+            ) : !state.isGameOver ? (
+              <motion.div
+                key="question"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+              >
+                <QuestionCard
+                  question={currentQuestion}
+                  selectedAnswer={state.selectedAnswer}
+                  isAnswered={state.isAnswered}
+                  timeLeft={state.timeLeft}
+                  totalTime={timeLimit}
+                  onAnswerSelect={handleAnswerSelect}
+                  questionNumber={state.currentQuestionIndex + 1}
+                  totalQuestions={questions.length}
+                  onClose={closeQuiz}
+                  onFiftyFifty={handleFiftyFifty}
+                  onQuestionFlip={handleQuestionFlip}
+                  onExtendTime={handleExtendTime}
+                  fiftyFiftyUsed={fiftyFiftyUsed}
+                  questionFlipUsed={questionFlipUsed}
+                  extendTimeUsed={extendTimeUsed}
+                  hiddenOptions={hiddenOptions}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ResultScreen
+                  score={state.score}
+                  totalQuestions={questions.length}
+                  onRestart={handleRestart}
+                  onShare={handleShare}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </>
   );
 };
 

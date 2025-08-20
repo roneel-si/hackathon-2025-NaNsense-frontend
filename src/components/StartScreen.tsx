@@ -1,109 +1,214 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Play, Trophy, Target, Users } from 'lucide-react';
 
 interface StartScreenProps {
   onStart: () => void;
+  onClose: () => void;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
+const StartScreen: React.FC<StartScreenProps> = ({ onStart, onClose }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center"
+    <div 
+      className="start-screen"
+      style={{
+        textAlign: 'center',
+        padding: '40px 30px',
+        background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
     >
-      {/* Rajasthan Royals Logo/Branding */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.0, delay: 0.2 }}
-        className="mb-8"
+      <div 
+        className="start-header"
+        style={{
+          background: 'linear-gradient(135deg, #e91e63, #ff6b9d)',
+          padding: '25px',
+          margin: '-40px -30px 30px -30px',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
       >
-        <div className="text-6xl mb-4">🏏</div>
-        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-pink-600 to-blue-600 bg-clip-text text-transparent mb-2">
-          Rajasthan Royals
-        </h1>
-        <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-1">
-          Trivia Challenge
-        </h2>
-        <div className="w-24 h-1 bg-gradient-to-r from-pink-500 to-blue-500 mx-auto rounded-full"></div>
-      </motion.div>
-
-      {/* Welcome Message */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.0, delay: 0.4 }}
-        className="mb-8 max-w-md"
-      >
-        <p className="text-gray-600 text-lg leading-relaxed">
-          Test your cricket knowledge with our exclusive Rajasthan Royals trivia! 
-          Challenge yourself with questions about cricket legends, memorable matches, and team history.
-        </p>
-      </motion.div>
-
-      {/* Features */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.0, delay: 0.6 }}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 w-full max-w-md"
-      >
-        <div className="flex flex-col items-center p-3 rounded-lg bg-gradient-to-br from-pink-50 to-blue-50 border border-pink-100">
-          <Target className="w-6 h-6 text-pink-600 mb-2" />
-          <span className="text-sm font-medium text-gray-700">Quick Questions</span>
-        </div>
-        <div className="flex flex-col items-center p-3 rounded-lg bg-gradient-to-br from-blue-50 to-pink-50 border border-blue-100">
-          <Trophy className="w-6 h-6 text-blue-600 mb-2" />
-          <span className="text-sm font-medium text-gray-700">Win Prizes</span>
-        </div>
-        <div className="flex flex-col items-center p-3 rounded-lg bg-gradient-to-br from-pink-50 to-blue-50 border border-pink-100">
-          <Users className="w-6 h-6 text-pink-600 mb-2" />
-          <span className="text-sm font-medium text-gray-700">Compete</span>
-        </div>
-      </motion.div>
-
-      {/* Start Button */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.0, delay: 0.8 }}
-        className="w-full max-w-xs"
-      >
-        <button
-          onClick={onStart}
-          className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-pink-600 to-blue-600 px-8 py-4 text-white font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+        <button 
+          className="close-btn" 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '15px',
+            right: '20px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            border: 'none',
+            color: 'white',
+            width: '35px',
+            height: '35px',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            fontSize: '20px',
+            zIndex: 3,
+            transition: 'all 0.3s ease'
+          }}
         >
-          <div className="flex items-center justify-center">
-            <Play className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform duration-300" />
-            Start Quiz
-          </div>
-          
-          {/* Shimmer effect */}
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000"></div>
+          &times;
         </button>
-      </motion.div>
+        <div 
+          className="start-title"
+          style={{
+            fontSize: '32px',
+            fontWeight: 800,
+            color: 'white',
+            marginBottom: '8px',
+            position: 'relative',
+            zIndex: 2,
+            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          🏏 RR Quiz Challenge
+        </div>
+        <div 
+          className="start-subtitle"
+          style={{
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: '16px',
+            position: 'relative',
+            zIndex: 2,
+            fontWeight: 500
+          }}
+        >
+          Test your Rajasthan Royals knowledge!
+        </div>
+      </div>
 
-      {/* Decorative elements */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2.0, delay: 1.0 }}
-        className="absolute top-4 right-4 text-2xl opacity-30"
+      <div 
+        className="quiz-logo"
+        style={{
+          width: '120px',
+          height: '120px',
+          margin: '0 auto 25px',
+          background: 'linear-gradient(135deg, #e91e63, #ff6b9d)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '4px solid #ffd700',
+          animation: 'logoFloat 3s ease-in-out infinite alternate',
+          boxShadow: '0 10px 30px rgba(233, 30, 99, 0.3)',
+          position: 'relative',
+          zIndex: 2
+        }}
       >
-        🏏
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2.0, delay: 1.2 }}
-        className="absolute bottom-4 left-4 text-2xl opacity-30"
+        <svg 
+          viewBox="0 0 24 24"
+          style={{
+            width: '60px',
+            height: '60px',
+            fill: 'white',
+            filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2))'
+          }}
+        >
+          <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
+        </svg>
+      </div>
+
+      <div 
+        className="quiz-description"
+        style={{
+          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: '16px',
+          lineHeight: 1.6,
+          marginBottom: '30px',
+          maxWidth: '400px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          position: 'relative',
+          zIndex: 2
+        }}
       >
-        🏆
-      </motion.div>
-    </motion.div>
+        Think you know everything about the Rajasthan Royals? Put your knowledge to the test with our interactive quiz featuring lifelines and timed questions!
+      </div>
+
+      <div 
+        className="quiz-features"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '20px',
+          marginBottom: '35px',
+          position: 'relative',
+          zIndex: 2
+        }}
+      >
+        <div 
+          className="feature-card"
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 215, 0, 0.3)',
+            borderRadius: '15px',
+            padding: '20px',
+            textAlign: 'center',
+            transition: 'all 0.3s ease',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <span className="feature-icon" style={{ fontSize: '28px', marginBottom: '10px', display: 'block' }}>🎯</span>
+          <div className="feature-title" style={{ color: '#ffd700', fontWeight: 600, fontSize: '14px', marginBottom: '5px' }}>5 Questions</div>
+          <div className="feature-desc" style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '12px', lineHeight: 1.4 }}>Carefully curated questions about RR</div>
+        </div>
+        <div 
+          className="feature-card"
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 215, 0, 0.3)',
+            borderRadius: '15px',
+            padding: '20px',
+            textAlign: 'center',
+            transition: 'all 0.3s ease',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <span className="feature-icon" style={{ fontSize: '28px', marginBottom: '10px', display: 'block' }}>⏱️</span>
+          <div className="feature-title" style={{ color: '#ffd700', fontWeight: 600, fontSize: '14px', marginBottom: '5px' }}>Timed Challenge</div>
+          <div className="feature-desc" style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '12px', lineHeight: 1.4 }}>25 seconds per question</div>
+        </div>
+        <div 
+          className="feature-card"
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 215, 0, 0.3)',
+            borderRadius: '15px',
+            padding: '20px',
+            textAlign: 'center',
+            transition: 'all 0.3s ease',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <span className="feature-icon" style={{ fontSize: '28px', marginBottom: '10px', display: 'block' }}>💡</span>
+          <div className="feature-title" style={{ color: '#ffd700', fontWeight: 600, fontSize: '14px', marginBottom: '5px' }}>3 Lifelines</div>
+          <div className="feature-desc" style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '12px', lineHeight: 1.4 }}>50:50, Flip Question, +10 Seconds</div>
+        </div>
+      </div>
+
+      <button 
+        className="start-quiz-btn" 
+        onClick={onStart}
+        style={{
+          background: 'linear-gradient(135deg, #ffd700, #ffed4e)',
+          color: '#1a1a2e',
+          border: 'none',
+          padding: '18px 40px',
+          borderRadius: '30px',
+          fontWeight: 700,
+          fontSize: '18px',
+          cursor: 'pointer',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '0 8px 25px rgba(255, 215, 0, 0.3)',
+          position: 'relative',
+          zIndex: 2,
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+          overflow: 'hidden'
+        }}
+      >
+        🚀 Start Quiz
+      </button>
+    </div>
   );
 };
 

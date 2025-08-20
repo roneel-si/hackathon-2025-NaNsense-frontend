@@ -1,241 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import Confetti from 'react-confetti';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 
 interface ConfettiProps {
   show: boolean;
-  onComplete?: () => void;
-  score?: number;
-  totalQuestions?: number;
+  onComplete: () => void;
 }
 
-const ConfettiAnimation: React.FC<ConfettiProps> = ({ 
-  show, 
-  onComplete, 
-  score = 0, 
-  totalQuestions = 1 
-}) => {
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
+const Confetti: React.FC<ConfettiProps> = ({ show, onComplete }) => {
+  const [confettiPieces, setConfettiPieces] = useState<Array<{
+    id: number;
+    left: string;
+    animationDuration: string;
+    animationDelay: string;
+    width: string;
+    height: string;
+    borderRadius?: string;
+    background: string;
+  }>>([]);
 
   useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
+    if (show) {
+      // Create confetti pieces
+      const pieces = Array.from({ length: 50 }, (_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        animationDuration: `${Math.random() * 2 + 2}s`,
+        animationDelay: `${Math.random() * 2}s`,
+        width: Math.random() > 0.5 ? '12px' : '8px',
+        height: Math.random() > 0.5 ? '6px' : '8px',
+        borderRadius: Math.random() > 0.5 ? '50%' : undefined,
+        background: ['#e91e63', '#ffd700', '#ff6b9d', '#ffed4e', '#4caf50'][i % 5]
+      }));
+      
+      setConfettiPieces(pieces);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+      // Remove confetti after animation completes
+      const timer = setTimeout(() => {
+        setConfettiPieces([]);
+        onComplete();
+      }, 5000);
 
-  useEffect(() => {
-    if (show && onComplete) {
-      const timer = setTimeout(onComplete, 15000); // Extended to 15 seconds for much longer confetti
       return () => clearTimeout(timer);
     }
   }, [show, onComplete]);
 
-  const percentage = Math.round((score / totalQuestions) * 100);
-  
-  // Determine confetti theme based on score
-  const getConfettiTheme = () => {
-    if (percentage >= 75) {
-      return {
-        name: 'excellent',
-        colors: ['#e91e63', '#ffd700', '#3f51b5', '#9c27b0', '#4caf50', '#ff9800'],
-        emojis: ['🔥', '🔥', '🔥', '🔥', '🔥', '🔥', '🔥', '🔥', '🔥', '🔥'],
-        numberOfPieces: 500,
-        gravity: 0.008, // EXTREMELY slow gravity
-        wind: 0.001, // Almost no wind
-        initialVelocityY: 2 // VERY slow initial velocity
-      };
-    } else if (percentage >= 50) {
-      return {
-        name: 'good',
-        colors: ['#4caf50', '#ff9800', '#2196f3', '#9c27b0', '#ffd700', '#e91e63'],
-        emojis: ['👍', '👍', '👍', '👍', '�', '👍', '👍', '👍', '👍', '�'],
-        numberOfPieces: 400,
-        gravity: 0.01, // EXTREMELY slow gravity
-        wind: 0.002, // Almost no wind
-        initialVelocityY: 3 // VERY slow initial velocity
-      };
-    } else {
-      return {
-        name: 'sad',
-        colors: ['#ff5722', '#9e9e9e', '#607d8b', '#795548', '#ff9800', '#e91e63'],
-        emojis: ['😔', '😔', '😔', '😔', '😔', '😔', '😔', '😔', '😔', '😔'],
-        numberOfPieces: 300,
-        gravity: 0.012, // EXTREMELY slow gravity
-        wind: 0.001, // Almost no wind
-        initialVelocityY: 4 // VERY slow initial velocity
-      };
-    }
-  };
-
-  const theme = getConfettiTheme();
+  if (!show) return null;
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          className="confetti-container"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Main confetti */}
-          <Confetti
-            width={windowSize.width}
-            height={windowSize.height}
-            recycle={false}
-            numberOfPieces={theme.numberOfPieces}
-            colors={theme.colors}
-            gravity={theme.gravity}
-            wind={theme.wind}
-            initialVelocityX={2} // VERY reduced horizontal velocity
-            initialVelocityY={theme.initialVelocityY}
-            confettiSource={{
-              x: 400,
-              y: windowSize.height / 2 - 150,
-              w: 400,
-              h: 200,
-            }}
-          />
-          
-          {/* Floating emojis - SUPER MASSIVE SIZE */}
-          {theme.emojis.map((emoji, i) => (
-            <motion.div
-              key={i}
-              className="absolute pointer-events-none flex items-center justify-center"
-              style={{
-                width: '150px',
-                height: '150px',
-                fontSize: '130px',
-                lineHeight: '1',
-              }}
-              initial={{
-                x: Math.random() * windowSize.width,
-                y: -200,
-                rotate: 0,
-                scale: 0,
-              }}
-              animate={{
-                y: windowSize.height + 200,
-                rotate: 360,
-                scale: 2.2, // Even bigger scale for MASSIVE emojis
-              }}
-              transition={{
-                duration: 15 + Math.random() * 8, // MUCH longer duration (15-23 seconds)
-                ease: "linear",
-                delay: Math.random() * 5,
-              }}
-            >
-              {emoji}
-            </motion.div>
-          ))}
-          
-          {/* Additional themed particles for excellent scores */}
-          {theme.name === 'excellent' && (
-            <>
-              {/* Golden sparkles - LARGER */}
-              {[...Array(20)].map((_, i) => (
-                <motion.div
-                  key={`sparkle-${i}`}
-                  className="absolute w-4 h-4 bg-yellow-400 rounded-full pointer-events-none"
-                  initial={{
-                    x: Math.random() * windowSize.width,
-                    y: -20,
-                    opacity: 0,
-                  }}
-                  animate={{
-                    y: windowSize.height + 20,
-                    opacity: [0, 1, 0],
-                  }}
-                  transition={{
-                    duration: 12 + Math.random() * 6, // MUCH longer duration for sparkles
-                    ease: "easeIn",
-                    delay: Math.random() * 4,
-                  }}
-                />
-              ))}
-              
-              {/* Cricket bat rain for excellent scores - MASSIVE SIZE */}
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={`bat-${i}`}
-                  className="absolute pointer-events-none flex items-center justify-center"
-                  style={{
-                    width: '150px',
-                    height: '150px',
-                    fontSize: '120px',
-                    lineHeight: '1',
-                  }}
-                  initial={{
-                    x: Math.random() * windowSize.width,
-                    y: -200,
-                    rotate: 0,
-                  }}
-                  animate={{
-                    y: windowSize.height + 200,
-                    rotate: 720,
-                    scale: 2.5, // Even bigger scale for cricket bats
-                  }}
-                  transition={{
-                    duration: 18 + Math.random() * 5, // MUCH longer duration for cricket bats
-                    ease: "linear",
-                    delay: Math.random() * 3,
-                  }}
-                >
-                  🏏
-                </motion.div>
-              ))}
-            </>
-          )}
-          
-          {/* Encouraging particles for sad scores */}
-          {theme.name === 'sad' && (
-            <>
-              {/* Motivational words - MUCH LARGER */}
-              {['TRY', 'AGAIN', 'LEARN', 'GROW', 'PRACTICE'].map((word, i) => (
-                <motion.div
-                  key={`word-${i}`}
-                  className="absolute font-bold text-orange-500 pointer-events-none"
-                  style={{
-                    fontSize: '32px',
-                    fontWeight: '900',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                  }}
-                  initial={{
-                    x: Math.random() * windowSize.width,
-                    y: -100,
-                    opacity: 0,
-                    scale: 0,
-                  }}
-                  animate={{
-                    y: windowSize.height + 100,
-                    opacity: [0, 1, 0],
-                    scale: 1.5,
-                  }}
-                  transition={{
-                    duration: 14 + Math.random() * 4, // MUCH longer duration for words
-                    ease: "linear",
-                    delay: Math.random() * 5,
-                  }}
-                >
-                  {word}
-                </motion.div>
-              ))}
-            </>
-          )}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div 
+      className="confetti-container"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 3000,
+        overflow: 'hidden'
+      }}
+    >
+      {confettiPieces.map((piece) => (
+        <div
+          key={piece.id}
+          className="confetti"
+          style={{
+            position: 'absolute',
+            width: piece.width,
+            height: piece.height,
+            borderRadius: piece.borderRadius,
+            background: piece.background,
+            opacity: 0.9,
+            left: piece.left,
+            animation: `confetti-fall ${piece.animationDuration} linear infinite`,
+            animationDelay: piece.animationDelay
+          }}
+        />
+      ))}
+      <style>
+        {`
+          @keyframes confetti-fall {
+            0% {
+              transform: translateY(-100vh) rotate(0deg);
+              opacity: 1;
+            }
+            100% {
+              transform: translateY(100vh) rotate(360deg);
+              opacity: 0;
+            }
+          }
+        `}
+      </style>
+    </div>
   );
 };
 
-export default ConfettiAnimation;
+export default Confetti;
