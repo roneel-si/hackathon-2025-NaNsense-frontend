@@ -157,7 +157,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
   // Auto-advance after showing answer
   useEffect(() => {
     if (state.isAnswered && !state.isGameOver) {
-      const timer = setTimeout(handleNext, 5000); // Increased from 2000ms to 5000ms (5 seconds)
+      const timer = setTimeout(handleNext, 3000); // Increased from 2000ms to 5000ms (5 seconds)
       return () => clearTimeout(timer);
     }
   }, [state.isAnswered, state.isGameOver, handleNext]);
