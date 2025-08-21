@@ -2,83 +2,93 @@ import { Question } from '../types';
 
 export const defaultQuestions: Question[] = [
   {
-    id: 1,
-    question: "🏏 Which team won the IPL 2023?",
-    options: ["Mumbai Indians", "Chennai Super Kings", "Rajasthan Royals", "Gujarat Titans"],
+    id: "1",
+    question: "Which sport is played at Wimbledon?",
+    options: ["Football", "Tennis", "Cricket", "Basketball"],
     correctAnswer: 1,
-    category: "Cricket",
-    difficulty: "medium"
+    category: "Sports",
+    difficulty: "easy",
+    hint: "This sport involves a racket and a net."
   },
   {
-    id: 2,
-    question: "⚽ Who won the FIFA World Cup 2022?",
-    options: ["Brazil", "France", "Argentina", "Portugal"],
-    correctAnswer: 2,
-    category: "Football",
-    difficulty: "easy"
-  },
-  {
-    id: 3,
-    question: "🏀 Which NBA player has won the most championships?",
-    options: ["Michael Jordan", "LeBron James", "Bill Russell", "Kareem Abdul-Jabbar"],
-    correctAnswer: 2,
-    category: "Basketball",
-    difficulty: "hard"
-  },
-  {
-    id: 4,
-    question: "🏈 What is the name of the NFL championship game?",
-    options: ["World Series", "Super Bowl", "Stanley Cup", "NBA Finals"],
+    id: "2", 
+    question: "How many players are on a basketball team during play?",
+    options: ["4", "5", "6", "7"],
     correctAnswer: 1,
-    category: "American Football",
-    difficulty: "easy"
+    category: "Sports",
+    difficulty: "easy",
+    hint: "Think about the starting lineup positions."
   },
   {
-    id: 5,
-    question: "🎾 Who holds the record for most Grand Slam titles?",
-    options: ["Roger Federer", "Rafael Nadal", "Novak Djokovic", "Pete Sampras"],
-    correctAnswer: 2,
-    category: "Tennis",
-    difficulty: "medium"
-  },
-  {
-    id: 6,
-    question: "🏓 Which country has won the most Olympic medals?",
-    options: ["Soviet Union", "United States", "China", "Germany"],
+    id: "3",
+    question: "In which sport would you perform a slam dunk?",
+    options: ["Volleyball", "Basketball", "Tennis", "Football"],
     correctAnswer: 1,
-    category: "Olympics",
-    difficulty: "medium"
+    category: "Sports", 
+    difficulty: "easy",
+    hint: "This involves jumping high to score."
   },
   {
-    id: 7,
-    question: "🏊‍♂️ Who is known as 'The Flying Fish' in swimming?",
-    options: ["Michael Phelps", "Usain Bolt", "Cristiano Ronaldo", "Lionel Messi"],
-    correctAnswer: 0,
-    category: "Swimming",
-    difficulty: "easy"
+    id: "4",
+    question: "What is the maximum score possible in ten-pin bowling?",
+    options: ["200", "250", "300", "350"],
+    correctAnswer: 2,
+    category: "Sports",
+    difficulty: "medium",
+    hint: "It's a perfect game with all strikes."
   },
   {
-    id: 8,
-    question: "🏃‍♂️ What is the world record for 100m sprint?",
-    options: ["9.58 seconds", "9.69 seconds", "9.72 seconds", "9.74 seconds"],
-    correctAnswer: 0,
-    category: "Athletics",
-    difficulty: "hard"
+    id: "5",
+    question: "Which country has won the most FIFA World Cups?",
+    options: ["Germany", "Argentina", "Brazil", "Italy"],
+    correctAnswer: 2,
+    category: "Sports",
+    difficulty: "medium",
+    hint: "This South American country is famous for its football culture."
   },
   {
-    id: 9,
-    question: "🏸 Which country dominates badminton?",
-    options: ["China", "Indonesia", "Malaysia", "Japan"],
-    correctAnswer: 0,
-    category: "Badminton",
-    difficulty: "medium"
+    id: "6",
+    question: "In golf, what is the term for one stroke under par?",
+    options: ["Eagle", "Birdie", "Bogey", "Albatross"],
+    correctAnswer: 1,
+    category: "Sports",
+    difficulty: "medium",
+    hint: "It's named after a flying creature."
   },
   {
-    id: 10,
-    question: "🏓 What is the national sport of Japan?",
-    options: ["Sumo Wrestling", "Baseball", "Soccer", "Tennis"],
+    id: "7",
+    question: "How long is a marathon race?",
+    options: ["26.2 miles", "25 miles", "24.2 miles", "27 miles"],
     correctAnswer: 0,
-    category: "General Sports",
-    difficulty: "medium"
+    category: "Sports",
+    difficulty: "medium",
+    hint: "The distance was standardized for the Olympics."
+  },
+  {
+    id: "8",
+    question: "Which sport uses terms like 'love', 'deuce', and 'advantage'?",
+    options: ["Badminton", "Tennis", "Squash", "Table Tennis"],
+    correctAnswer: 1,
+    category: "Sports",
+    difficulty: "easy",
+    hint: "This sport is played on grass courts at Wimbledon."
+  },
+  {
+    id: "9",
+    question: "In which sport do teams compete for the Stanley Cup?",
+    options: ["Basketball", "Football", "Ice Hockey", "Baseball"],
+    correctAnswer: 2,
+    category: "Sports",
+    difficulty: "medium",
+    hint: "This sport is played on ice with pucks."
+  },
+  {
+    id: "10",
+    question: "What is the highest possible break in snooker?",
+    options: ["147", "155", "167", "180"],
+    correctAnswer: 0,
+    category: "Sports",
+    difficulty: "hard",
+    hint: "It involves potting all balls in perfect sequence."
   }
 ];

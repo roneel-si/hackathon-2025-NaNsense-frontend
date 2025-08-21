@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
@@ -9,13 +10,16 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    emptyOutDir: false,
+    // Configure library build for the widget
     lib: {
-      entry: 'src/widget.tsx',
+      entry: resolve(__dirname, 'src/widget.tsx'),
       name: 'TriviaQuizWidget',
       fileName: 'widget',
       formats: ['umd', 'es']
     },
     rollupOptions: {
+      // External dependencies
       external: ['react', 'react-dom'],
       output: {
         globals: {

@@ -1,30 +1,72 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QuizState, WidgetConfig } from '../types';
-import { defaultQuestions } from '../data/questions';
-import { fetchQuestionsFromAPI } from '../utils/apiUtils';
 import { shuffleAllQuestions, ShuffledQuestion } from '../utils/shuffleUtils';
 import QuestionCard from './QuestionCard';
 import ResultScreen from './ResultScreen';
-import Confetti from './Confetti';
+import ConfettiAnimation from './Confetti';
 import StartScreen from './StartScreen';
-import FloatingButton from './FloatingButton';
 
 interface TriviaQuizProps {
   config?: WidgetConfig;
+  compact?: boolean;
+  onReload?: () => void;
+  onStartQuiz?: () => Promise<void>;
+  theme?: {
+    name: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+    button: string;
+    text: string;
+    border: string;
+    glow: string;
+    modalBg: string;
+    startBg: string;
+    questionBg: string;
+  };
 }
 
-const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
+const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {}, compact = false, onReload, onStartQuiz, theme }) => {
   const {
     questions: providedQuestions,
-    timeLimit = 25, // Changed to 25 seconds
+    timeLimit = 25,
     apiUrl,
     onComplete
   } = config;
 
   const [questions, setQuestions] = useState<ShuffledQuestion[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [showStartScreen, setShowStartScreen] = useState(true);
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+
+  // Initialize lifelines
+  const initializeLifelines = () => ({
+    fiftyFifty: {
+      id: 'fiftyFifty',
+      name: '50:50',
+      icon: '🎯',
+      description: 'Remove 2 wrong answers',
+      used: false,
+      available: true
+    },
+    refreshQuestion: {
+      id: 'refreshQuestion',
+      name: 'Skip',
+      icon: '🔄',
+      description: 'Skip the question',
+      used: false,
+      available: true
+    },
+    extraTime: {
+      id: 'extraTime',
+      name: '+Time',
+      icon: '⚡',
+      description: 'Add 15 seconds',
+      used: false,
+      available: true
+    }
+  });
 
   const [state, setState] = useState<QuizState>({
     currentQuestionIndex: 0,
@@ -33,63 +75,78 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     isAnswered: false,
     timeLeft: timeLimit,
     isGameOver: false,
-    showConfetti: false
+    showConfetti: false,
+    lifelines: initializeLifelines(),
+    eliminatedOptions: [],
+    showHint: false,
+    streak: 0,
+    bestStreak: 0
   });
 
-  // Lifeline states
-  const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState(false);
-  const [questionFlipUsed, setQuestionFlipUsed] = useState(false);
-  const [extendTimeUsed, setExtendTimeUsed] = useState(false);
-  const [hiddenOptions, setHiddenOptions] = useState<number[]>([]);
-
   const currentQuestion = questions[state.currentQuestionIndex];
+  const [timeBonus, setTimeBonus] = useState(0);
 
-  // Initialize with default questions first
+  // Initialize questions with shuffling
   useEffect(() => {
-    const questionsToUse = providedQuestions || defaultQuestions;
-    const shuffledQuestions = shuffleAllQuestions(questionsToUse);
-    setQuestions(shuffledQuestions);
-  }, [providedQuestions]);
+    if (!apiUrl && providedQuestions) {
+      const shuffledQuestions = shuffleAllQuestions(providedQuestions);
+      setQuestions(shuffledQuestions);
+    }
+    // Removed default questions fallback - only use API or provided questions
+  }, [providedQuestions, apiUrl]);
 
-  // Timer effect
-  useEffect(() => {
-    if (state.isGameOver || state.isAnswered || showStartScreen) return;
-
-    const timer = setInterval(() => {
-      setState(prev => {
-        if (prev.timeLeft <= 1) {
-          // Time's up - mark as answered with timeout (no answer selected)
-          return {
-            ...prev,
-            timeLeft: 0,
-            isAnswered: true,
-            selectedAnswer: -1 // Use -1 to indicate timeout (no answer selected)
-          };
-        }
-        return {
-          ...prev,
-          timeLeft: prev.timeLeft - 1
-        };
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [state.isGameOver, state.isAnswered, showStartScreen]);
-
-  // Handle answer selection
-  const handleAnswerSelect = useCallback((answerIndex: number) => {
-    if (state.isAnswered) return;
-
-    // For single choice, check if the selected answer matches the correct answer
-    const isCorrect = answerIndex === currentQuestion.correctAnswer;
+  // Handle start quiz
+  const handleStart = useCallback(async () => {
+    // If onStartQuiz is provided, call it first (for loading state handling)
+    if (onStartQuiz) {
+      await onStartQuiz();
+    }
     
-    setState(prev => ({
-      ...prev,
-      selectedAnswer: answerIndex,
-      isAnswered: true,
-      score: isCorrect ? prev.score + 1 : prev.score
-    }));
-  }, [state.isAnswered, currentQuestion]);
+    if (questions.length > 0) {
+      // Questions are available, start the quiz
+      setShowStartScreen(false);
+      setGameStarted(true); // Start the timer now
+    } else {
+      // No questions available
+      setError('No questions available to start the quiz');
+    }
+  }, [questions.length, onStartQuiz]);
+
+  // Handle restart
+  const handleRestart = useCallback(async () => {
+    // Ask parent to reload fresh questions
+    if (onReload) {
+      try {
+        await onReload();
+      } catch (_) {}
+    }
+
+    // Reset all state
+    setState({
+      currentQuestionIndex: 0,
+      score: 0,
+      selectedAnswer: null,
+      isAnswered: false,
+      timeLeft: timeLimit,
+      isGameOver: false,
+      showConfetti: false,
+      lifelines: initializeLifelines(),
+      eliminatedOptions: [],
+      showHint: false,
+      streak: 0,
+      bestStreak: 0
+    });
+    setTimeBonus(0);
+    setShowStartScreen(true);
+    setGameStarted(false); // Reset game started state
+    setError(null);
+    
+    // If we already have providedQuestions, reshuffle while waiting onReload
+    if (providedQuestions && providedQuestions.length > 0) {
+      const shuffledQuestions = shuffleAllQuestions(providedQuestions);
+      setQuestions(shuffledQuestions);
+    }
+  }, [timeLimit, providedQuestions, onReload]);
 
   // Handle next question or game over
   const handleNext = useCallback(() => {
@@ -99,15 +156,14 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
         currentQuestionIndex: prev.currentQuestionIndex + 1,
         selectedAnswer: null,
         isAnswered: false,
-        timeLeft: timeLimit
+        timeLeft: timeLimit,
+        eliminatedOptions: [],
+        showHint: false
       }));
-      
-      // Reset lifelines for new question
-      setHiddenOptions([]);
     } else {
       // Game over
       const percentage = Math.round((state.score / questions.length) * 100);
-      const shouldShowConfetti = percentage >= 80;
+      const shouldShowConfetti = percentage > 75;
       
       setState(prev => ({
         ...prev,
@@ -120,97 +176,18 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
         onComplete(state.score, questions.length);
       }
     }
-  }, [state.currentQuestionIndex, state.score, currentQuestion, questions.length, timeLimit, onComplete]);
-
-  // Handle start quiz
-  const handleStart = useCallback(() => {
-    console.log('🚀 Quiz started!');
-    
-    // If API URL is provided and no questions are provided, fetch from API
-    if (apiUrl && !providedQuestions) {
-      console.log('🔗 Fetching questions from API:', apiUrl);
-      console.log('📄 Page title being sent as prompt:', document.title);
-      
-      fetchQuestionsFromAPI(apiUrl)
-        .then(fetchedQuestions => {
-          console.log('✅ API questions received:', fetchedQuestions);
-          const shuffledQuestions = shuffleAllQuestions(fetchedQuestions);
-          setQuestions(shuffledQuestions);
-          console.log('🔀 Questions shuffled and set:', shuffledQuestions);
-          setShowStartScreen(false);
-        })
-        .catch(err => {
-          console.error('❌ Failed to fetch questions from API:', err);
-          console.log('🔄 Falling back to default questions');
-          const shuffledQuestions = shuffleAllQuestions(defaultQuestions);
-          setQuestions(shuffledQuestions);
-          setShowStartScreen(false);
-        });
-    } else {
-      // Use existing questions (default or provided)
-      console.log('ℹ️ Using existing questions (no API call needed)');
-      setShowStartScreen(false);
-    }
-  }, [apiUrl, providedQuestions]);
-
-  // Handle restart
-  const handleRestart = useCallback(() => {
-    // Reset state first
-    setState({
-      currentQuestionIndex: 0,
-      score: 0,
-      selectedAnswer: null,
-      isAnswered: false,
-      timeLeft: timeLimit,
-      isGameOver: false,
-      showConfetti: false
-    });
-    
-    // Reset lifelines
-    setFiftyFiftyUsed(false);
-    setQuestionFlipUsed(false);
-    setExtendTimeUsed(false);
-    
-    // If API URL is provided and no questions are provided, fetch new questions from API
-    if (apiUrl && !providedQuestions) {
-      console.log('🔄 Refetching questions from API for restart:', apiUrl);
-      
-      fetchQuestionsFromAPI(apiUrl)
-        .then(fetchedQuestions => {
-          console.log('✅ New API questions received for restart:', fetchedQuestions);
-          const shuffledQuestions = shuffleAllQuestions(fetchedQuestions);
-          setQuestions(shuffledQuestions);
-          console.log('🔀 New questions shuffled and set for restart:', shuffledQuestions);
-          setShowStartScreen(true);
-        })
-        .catch(err => {
-          console.error('❌ Failed to refetch questions from API for restart:', err);
-          console.log('🔄 Falling back to reshuffling existing questions');
-          // Fallback to reshuffling existing questions
-          const questionsToUse = providedQuestions || defaultQuestions;
-          const shuffledQuestions = shuffleAllQuestions(questionsToUse);
-          setQuestions(shuffledQuestions);
-          setShowStartScreen(true);
-        });
-    } else {
-      // Use existing questions (default or provided) - just reshuffle
-      console.log('ℹ️ Reshuffling existing questions for restart (no API call needed)');
-      const questionsToUse = providedQuestions || defaultQuestions;
-      const shuffledQuestions = shuffleAllQuestions(questionsToUse);
-      setQuestions(shuffledQuestions);
-      setShowStartScreen(true);
-    }
-  }, [timeLimit, providedQuestions, apiUrl]);
+  }, [state.currentQuestionIndex, state.score, questions.length, timeLimit, onComplete]);
 
   // Handle share
   const handleShare = useCallback(() => {
     const percentage = Math.round((state.score / questions.length) * 100);
+    const totalScore = Math.round(state.score * 10 + timeBonus);
     
-    const text = `🎉 I scored ${state.score}/${questions.length} (${percentage}%) on the RR Quiz Challenge! Can you beat my score? 🏆`;
+    const text = `🎮 I just scored ${state.score}/${questions.length} (${percentage}%) with ${totalScore} total points on Quiz Master! 🏆 Can you beat my score? 🚀`;
     
     if (navigator.share) {
       navigator.share({
-        title: 'RR Quiz Challenge',
+        title: 'Quiz Master - Challenge Complete!',
         text: text,
         url: window.location.href
       });
@@ -219,104 +196,12 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
       navigator.clipboard.writeText(text);
       alert('Score copied to clipboard!');
     }
-  }, [state.score, questions.length]);
-
-  // Lifeline functions
-  const handleFiftyFifty = useCallback(() => {
-    if (fiftyFiftyUsed || state.isAnswered) return;
-    
-    setFiftyFiftyUsed(true);
-    
-    const correctIndex = currentQuestion.correctAnswer;
-    const wrongOptions = currentQuestion.options
-      .map((_, index) => index)
-      .filter(index => index !== correctIndex);
-    
-    // Randomly select 2 wrong options to hide
-    const shuffledWrong = wrongOptions.sort(() => Math.random() - 0.5);
-    const toHide = shuffledWrong.slice(0, 2);
-    
-    // Store hidden options for this question
-    setHiddenOptions(toHide);
-  }, [fiftyFiftyUsed, state.isAnswered, currentQuestion]);
-
-  const handleQuestionFlip = useCallback(() => {
-    if (questionFlipUsed || state.isAnswered) return;
-    
-    setQuestionFlipUsed(true);
-    
-    // Create alternate question for the same topic
-    const alternateQuestions = [
-      {
-        question: "What is the home ground of Rajasthan Royals?",
-        options: ["Sawai Mansingh Stadium", "Wankhede Stadium", "Eden Gardens", "M. Chinnaswamy Stadium"],
-        correctAnswer: 0,
-        originalCorrectAnswer: 0,
-        id: 0,
-        category: 'sports',
-        difficulty: 'medium' as const
-      },
-      {
-        question: "Who was the first captain of Rajasthan Royals?",
-        options: ["Shane Warne", "Rahul Dravid", "Ajinkya Rahane", "Steve Smith"],
-        correctAnswer: 0,
-        originalCorrectAnswer: 0,
-        id: 1,
-        category: 'sports',
-        difficulty: 'medium' as const
-      },
-      {
-        question: "What is the primary color of RR's jersey?",
-        options: ["Blue", "Pink", "Red", "Green"],
-        correctAnswer: 1,
-        originalCorrectAnswer: 1,
-        id: 2,
-        category: 'sports',
-        difficulty: 'medium' as const
-      },
-      {
-        question: "Which year did RR win their first IPL title?",
-        options: ["2008", "2009", "2010", "2011"],
-        correctAnswer: 0,
-        originalCorrectAnswer: 0,
-        id: 3,
-        category: 'sports',
-        difficulty: 'medium' as const
-      },
-      {
-        question: "Who is known as RR's 'Mr. 360'?",
-        options: ["Jos Buttler", "Ben Stokes", "Sanju Samson", "Rahul Tewatia"],
-        correctAnswer: 0,
-        originalCorrectAnswer: 0,
-        id: 4,
-        category: 'sports',
-        difficulty: 'medium' as const
-      }
-    ];
-    
-    // Replace current question with alternate
-    const newQuestions = [...questions];
-    newQuestions[state.currentQuestionIndex] = alternateQuestions[state.currentQuestionIndex % alternateQuestions.length];
-    setQuestions(newQuestions);
-    
-    // Reset hidden options for new question
-    setHiddenOptions([]);
-  }, [questionFlipUsed, state.isAnswered, questions, state.currentQuestionIndex]);
-
-  const handleExtendTime = useCallback(() => {
-    if (extendTimeUsed || state.isAnswered) return;
-    
-    setExtendTimeUsed(true);
-    setState(prev => ({
-      ...prev,
-      timeLeft: Math.min(prev.timeLeft + 10, 25) // Cap at 25 seconds
-    }));
-  }, [extendTimeUsed, state.isAnswered]);
+  }, [state.score, questions.length, timeBonus]);
 
   // Auto-advance after showing answer
   useEffect(() => {
     if (state.isAnswered && !state.isGameOver) {
-      const timer = setTimeout(handleNext, 2000);
+      const timer = setTimeout(handleNext, 3000);
       return () => clearTimeout(timer);
     }
   }, [state.isAnswered, state.isGameOver, handleNext]);
@@ -331,118 +216,293 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     }
   }, [state.showConfetti]);
 
-  const openQuiz = () => setIsQuizOpen(true);
-  const closeQuiz = () => setIsQuizOpen(false);
+  // Timer effect - only start when game has started
+  useEffect(() => {
+    if (!gameStarted || state.isGameOver || state.isAnswered) return;
 
-  // Show floating button when quiz is not open
-  if (!isQuizOpen) {
-    return <FloatingButton onClick={openQuiz} />;
+    const timer = setInterval(() => {
+      setState(prev => {
+        if (prev.timeLeft <= 1) {
+          // Time's up - auto-select timeout
+          return {
+            ...prev,
+            timeLeft: 0,
+            selectedAnswer: -1, // -1 indicates timeout
+            isAnswered: true
+          };
+        }
+        return {
+          ...prev,
+          timeLeft: prev.timeLeft - 1
+        };
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameStarted, state.isGameOver, state.isAnswered, state.currentQuestionIndex]);
+
+  // Handle answer selection
+  const handleAnswerSelect = useCallback((answerIndex: number) => {
+    if (state.isAnswered) return;
+
+    const correctAnswer = Array.isArray(currentQuestion.correctAnswer) 
+      ? currentQuestion.correctAnswer[0] 
+      : currentQuestion.correctAnswer;
+    
+    const isCorrect = answerIndex === correctAnswer;
+    const newScore = isCorrect ? state.score + 1 : state.score;
+    const newStreak = isCorrect ? state.streak + 1 : 0;
+    const newBestStreak = Math.max(state.bestStreak, newStreak);
+    
+    // Calculate time bonus (more time left = more bonus)
+    const bonus = isCorrect ? Math.max(0, Math.floor(state.timeLeft / 5)) : 0;
+    setTimeBonus(prev => prev + bonus);
+
+    setState(prev => ({
+      ...prev,
+      selectedAnswer: answerIndex,
+      isAnswered: true,
+      score: newScore,
+      streak: newStreak,
+      bestStreak: newBestStreak
+    }));
+  }, [state.isAnswered, state.score, state.streak, state.bestStreak, state.timeLeft, currentQuestion]);
+
+  // Handle lifeline usage
+  const handleUseLifeline = useCallback((lifelineId: string) => {
+    if (state.isAnswered) return;
+
+    setState(prev => {
+      const newLifelines = { ...prev.lifelines };
+      
+      switch (lifelineId) {
+        case 'fiftyFifty':
+          if (!newLifelines.fiftyFifty.used) {
+            newLifelines.fiftyFifty.used = true;
+            
+            // Find correct answer
+            const correctAnswer = Array.isArray(currentQuestion.correctAnswer) 
+              ? currentQuestion.correctAnswer[0] 
+              : currentQuestion.correctAnswer;
+            
+            // Get all wrong answer indices
+            const wrongAnswers = currentQuestion.options
+              .map((_, index) => index)
+              .filter(index => index !== correctAnswer);
+            
+            // Randomly select 2 wrong answers to eliminate
+            const toEliminate = wrongAnswers
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 2);
+            
+            return {
+              ...prev,
+              lifelines: newLifelines,
+              eliminatedOptions: [...prev.eliminatedOptions, ...toEliminate]
+            };
+          }
+          break;
+          
+        case 'refreshQuestion':
+          if (!newLifelines.refreshQuestion.used) {
+            newLifelines.refreshQuestion.used = true;
+            // Skip to next question
+            setTimeout(() => {
+              if (prev.currentQuestionIndex < questions.length - 1) {
+                setState(current => ({
+                  ...current,
+                  currentQuestionIndex: current.currentQuestionIndex + 1,
+                  selectedAnswer: null,
+                  isAnswered: false,
+                  timeLeft: timeLimit,
+                  eliminatedOptions: [],
+                  showHint: false,
+                  lifelines: newLifelines
+                }));
+              }
+            }, 100);
+          }
+          break;
+          
+        case 'extraTime':
+          if (!newLifelines.extraTime.used) {
+            newLifelines.extraTime.used = true;
+            return {
+              ...prev,
+              lifelines: newLifelines,
+              timeLeft: Math.min(prev.timeLeft + 15, timeLimit + 15)
+            };
+          }
+          break;
+      }
+      
+      return { ...prev, lifelines: newLifelines };
+    });
+  }, [state.isAnswered, currentQuestion, questions.length, timeLimit]);
+
+  // Show start screen
+  if (showStartScreen) {
+    return <StartScreen onStart={handleStart} compact={compact} theme={theme} />;
+  }
+
+  // Show error state - Responsive
+  if (error) {
+    return (
+      <div className={`${
+        compact 
+          ? 'h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-lg flex items-center justify-center' 
+          : 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center'
+      }`}>
+        <div className="text-center max-w-md mx-auto p-fluid-md">
+          <div className="text-red-400 mb-fluid-sm text-fluid-4xl">❌</div>
+          <h2 className="text-white text-fluid-xl font-bold mb-fluid-xs">Error</h2>
+          <p className="text-gray-300 text-fluid-sm mb-fluid-sm">
+            {error}
+          </p>
+          <button
+            onClick={handleRestart}
+            className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-fluid-md py-fluid-xs rounded-lg font-semibold hover:opacity-90 transition-opacity text-fluid-sm"
+          >
+            Retry API Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no API URL and no provided questions - Responsive
+  if (!apiUrl && !providedQuestions) {
+    return (
+      <div className={`${
+        compact 
+          ? 'h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-lg flex items-center justify-center' 
+          : 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center'
+      }`}>
+        <div className="text-center max-w-md mx-auto p-fluid-md">
+          <div className="text-yellow-400 mb-fluid-sm text-fluid-4xl">⚙️</div>
+          <h2 className="text-white text-fluid-xl font-bold mb-fluid-xs">Configuration Required</h2>
+          <p className="text-gray-300 text-fluid-sm mb-fluid-sm">
+            Please provide an API URL or questions to start the quiz.
+          </p>
+          <div className="text-gray-400 text-fluid-xs">
+            This quiz widget requires either an API endpoint or pre-defined questions to function.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if we don't have any questions loaded - Responsive
+  if (!showStartScreen && questions.length === 0 && !error) {
+    return (
+      <div className={`${
+        compact 
+          ? 'h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-lg flex items-center justify-center' 
+          : 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center'
+      }`}>
+        <div className="text-center max-w-md mx-auto p-fluid-md">
+          <div className="text-blue-400 mb-fluid-sm text-fluid-4xl">📝</div>
+          <h2 className="text-white text-fluid-xl font-bold mb-fluid-xs">No Questions Available</h2>
+          <p className="text-gray-300 text-fluid-sm mb-fluid-sm">
+            Questions are still being loaded or none were received from the API.
+          </p>
+          <button
+            onClick={handleRestart}
+            className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-fluid-md py-fluid-xs rounded-lg font-semibold hover:opacity-90 transition-opacity text-fluid-sm"
+          >
+            Reload Questions
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Ensure we have a valid current question before rendering - Responsive
+  if (!currentQuestion) {
+    return (
+      <div className={`${
+        compact 
+          ? 'h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-lg flex items-center justify-center' 
+          : 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center'
+      }`}>
+        <div className="text-center max-w-md mx-auto p-fluid-md">
+          <div className="text-orange-400 mb-fluid-sm text-fluid-4xl">🔄</div>
+          <h2 className="text-white text-fluid-xl font-bold mb-fluid-xs">Loading Question...</h2>
+          <p className="text-gray-300 text-fluid-sm">
+            Please wait while we prepare your next question.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
-      {/* Quiz Overlay */}
-      <div 
-        className="quiz-overlay"
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(0, 0, 0, 0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 2000,
-          backdropFilter: 'blur(10px)'
-        }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            closeQuiz();
-          }
-        }}
-      >
-        <div 
-          className="quiz-container"
-          style={{
-            background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
-            borderRadius: '20px',
-            padding: 0,
-            width: '90%',
-            maxWidth: '650px',
-            position: 'relative',
-            overflow: 'hidden',
-            border: '2px solid #ffd700',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
-          }}
-        >
-          <Confetti 
-            show={state.showConfetti} 
-            onComplete={() => setState(prev => ({ ...prev, showConfetti: false }))}
-          />
-          
-          <AnimatePresence mode="wait">
-            {showStartScreen ? (
-              <motion.div
-                key="start"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-              >
-                <StartScreen 
-                  onStart={handleStart}
-                  onClose={closeQuiz}
-                />
-              </motion.div>
-            ) : !state.isGameOver ? (
-              <motion.div
-                key="question"
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.3 }}
-              >
-                <QuestionCard
-                  question={currentQuestion}
-                  selectedAnswer={state.selectedAnswer}
-                  isAnswered={state.isAnswered}
-                  timeLeft={state.timeLeft}
-                  totalTime={timeLimit}
-                  onAnswerSelect={handleAnswerSelect}
-                  questionNumber={state.currentQuestionIndex + 1}
-                  totalQuestions={questions.length}
-                  onClose={closeQuiz}
-                  onFiftyFifty={handleFiftyFifty}
-                  onQuestionFlip={handleQuestionFlip}
-                  onExtendTime={handleExtendTime}
-                  fiftyFiftyUsed={fiftyFiftyUsed}
-                  questionFlipUsed={questionFlipUsed}
-                  extendTimeUsed={extendTimeUsed}
-                  hiddenOptions={hiddenOptions}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ResultScreen
-                  score={state.score}
-                  totalQuestions={questions.length}
-                  onRestart={handleRestart}
-                  onShare={handleShare}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    </>
+    <div className="trivia-widget-container">
+      <ConfettiAnimation 
+        show={state.showConfetti} 
+        onComplete={() => setState(prev => ({ ...prev, showConfetti: false }))}
+        score={state.score}
+        totalQuestions={questions.length}
+      />
+      
+      <AnimatePresence mode="wait">
+        {!state.isGameOver ? (
+          <motion.div
+            key="question"
+            className={compact ? "h-full" : "min-h-screen"}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 300,
+              damping: 25,
+              duration: 0.5
+            }}
+          >
+            <QuestionCard
+              question={currentQuestion}
+              selectedAnswer={state.selectedAnswer}
+              isAnswered={state.isAnswered}
+              timeLeft={state.timeLeft}
+              totalTime={timeLimit}
+              onAnswerSelect={handleAnswerSelect}
+              questionNumber={state.currentQuestionIndex + 1}
+              totalQuestions={questions.length}
+              lifelines={state.lifelines}
+              eliminatedOptions={state.eliminatedOptions}
+              showHint={state.showHint}
+              onUseLifeline={handleUseLifeline}
+              streak={state.streak}
+              compact={compact}
+              gameStarted={gameStarted}
+              theme={theme}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="result"
+            className={compact ? "h-full" : "min-h-screen"}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25, duration: 0.5 }}
+          >
+            <ResultScreen
+              score={state.score}
+              totalQuestions={questions.length}
+              onRestart={handleRestart}
+              onShare={handleShare}
+              streak={state.bestStreak}
+              timeBonus={timeBonus}
+              accuracy={Math.round((state.score / questions.length) * 100)}
+              compact={compact}
+              theme={theme}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 

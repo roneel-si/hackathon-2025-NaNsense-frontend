@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import TriviaQuiz from './components/TriviaQuiz';
+import FloatingButton from './components/FloatingButton';
 import { WidgetConfig } from './types';
 import './index.css';
 
@@ -35,7 +35,7 @@ class TriviaQuizWidget {
     root.render(
       <React.StrictMode>
         <div>
-          <TriviaQuiz config={this.config} />
+          <FloatingButton config={this.config} />
         </div>
       </React.StrictMode>
     );
@@ -76,22 +76,18 @@ document.addEventListener('DOMContentLoaded', () => {
         config.theme = element.getAttribute('data-theme') as 'light' | 'dark';
       }
       
+      // Set primary color if provided
       const primaryColor = element.getAttribute('data-primary-color');
       if (primaryColor) {
-        config.primaryColor = primaryColor;
+          // Apply primary color to document root for CSS variables
+          document.documentElement.style.setProperty('--primary-color', primaryColor);
       }
-      
+
+      // Set secondary color if provided  
       const secondaryColor = element.getAttribute('data-secondary-color');
       if (secondaryColor) {
-        config.secondaryColor = secondaryColor;
-      }
-      
-      const apiUrl = element.getAttribute('data-api-url');
-      if (apiUrl) {
-        config.apiUrl = apiUrl;
-      } else {
-        // Default to the sportziq API
-        config.apiUrl = 'https://sportziq-apis.onrender.com/trivia/generate-sports-trivia';
+          // Apply secondary color to document root for CSS variables
+          document.documentElement.style.setProperty('--secondary-color', secondaryColor);
       }
       
       new TriviaQuizWidget(element as HTMLElement, config);
@@ -102,9 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     floatingContainer.id = 'floating-trivia-widget';
     document.body.appendChild(floatingContainer);
     
-    new TriviaQuizWidget(floatingContainer, {
-      apiUrl: 'https://sportziq-apis.onrender.com/trivia/generate-sports-trivia'
-    });
+    new TriviaQuizWidget(floatingContainer, {});
   }
 });
 
