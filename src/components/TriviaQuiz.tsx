@@ -155,11 +155,7 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
 
   // Handle restart
   const handleRestart = useCallback(() => {
-    // Reshuffle questions on restart
-    const questionsToUse = providedQuestions || defaultQuestions;
-    const shuffledQuestions = shuffleAllQuestions(questionsToUse);
-    setQuestions(shuffledQuestions);
-    
+    // Reset state first
     setState({
       currentQuestionIndex: 0,
       score: 0,
@@ -175,8 +171,36 @@ const TriviaQuiz: React.FC<TriviaQuizProps> = ({ config = {} }) => {
     setQuestionFlipUsed(false);
     setExtendTimeUsed(false);
     
-    setShowStartScreen(true);
-  }, [timeLimit, providedQuestions]);
+    // If API URL is provided and no questions are provided, fetch new questions from API
+    if (apiUrl && !providedQuestions) {
+      console.log('🔄 Refetching questions from API for restart:', apiUrl);
+      
+      fetchQuestionsFromAPI(apiUrl)
+        .then(fetchedQuestions => {
+          console.log('✅ New API questions received for restart:', fetchedQuestions);
+          const shuffledQuestions = shuffleAllQuestions(fetchedQuestions);
+          setQuestions(shuffledQuestions);
+          console.log('🔀 New questions shuffled and set for restart:', shuffledQuestions);
+          setShowStartScreen(true);
+        })
+        .catch(err => {
+          console.error('❌ Failed to refetch questions from API for restart:', err);
+          console.log('🔄 Falling back to reshuffling existing questions');
+          // Fallback to reshuffling existing questions
+          const questionsToUse = providedQuestions || defaultQuestions;
+          const shuffledQuestions = shuffleAllQuestions(questionsToUse);
+          setQuestions(shuffledQuestions);
+          setShowStartScreen(true);
+        });
+    } else {
+      // Use existing questions (default or provided) - just reshuffle
+      console.log('ℹ️ Reshuffling existing questions for restart (no API call needed)');
+      const questionsToUse = providedQuestions || defaultQuestions;
+      const shuffledQuestions = shuffleAllQuestions(questionsToUse);
+      setQuestions(shuffledQuestions);
+      setShowStartScreen(true);
+    }
+  }, [timeLimit, providedQuestions, apiUrl]);
 
   // Handle share
   const handleShare = useCallback(() => {
